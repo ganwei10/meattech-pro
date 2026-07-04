@@ -163,6 +163,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
           </div>
 
+          {/* 用户管理 */}
+          <Link href="/admin/users" onClick={() => setPathname('/admin/users')} style={{
+            padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88,
+            background: isActive('/admin/users') ? 'rgba(255,255,255,0.15)' : 'transparent',
+            textDecoration: 'none', display: 'block', marginTop: 4,
+          }}>👥 用户管理</Link>
+
           {/* 内容管理 - 可折叠 */}
           <div>
             <div

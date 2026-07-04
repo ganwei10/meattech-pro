@@ -51,10 +51,11 @@ export async function GET() {
     }
 
     // 4. Add missing columns to User
-    logs.push('Adding User.phone/company...');
+    logs.push('Adding User.phone/company/lastLogin...');
     try {
       await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT`);
       await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "company" TEXT`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastLogin" TIMESTAMP(3)`);
       logs.push('User columns OK');
     } catch (e) {
       logs.push('User columns already exist or skip');

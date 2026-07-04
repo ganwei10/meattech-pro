@@ -24,6 +24,12 @@ export async function POST(request: Request) {
     .setExpirationTime('7d')
     .sign(secret);
 
+  // 更新最后登录时间
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLogin: new Date() },
+  });
+
   const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name, role: user.role, phone: user.phone || '' } });
   res.cookies.set('meattech_token', token, {
     httpOnly: true,
