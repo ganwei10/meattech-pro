@@ -79,18 +79,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  const navLinks = [
+    { href: '/admin', label: '📊 仪表盘' },
+    { href: '/admin/posts', label: '📝 文章管理' },
+    { href: '/admin/posts/new', label: '➕ 发布文章' },
+    { href: '/admin/pilot-lines', label: '🏭 产线管理' },
+    { href: '/admin/bookings', label: '📅 预约管理' },
+    { href: '/admin/categories', label: '📁 分类管理' },
+    { href: '/admin/settings', label: '⚙️ 系统设置' },
+  ];
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex' }}>
       <aside style={{ width: 220, background: '#1E3A8A', color: '#fff', padding: '24px 16px', flexShrink: 0 }}>
         <div style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 32, padding: '0 8px' }}>🥩 MeatTech Admin</div>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <Link href="/admin" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, transition: 'all .2s' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>📊 仪表盘</Link>
-          <Link href="/admin/posts" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88 }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>📝 文章管理</Link>
-          <Link href="/admin/posts/new" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88 }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>➕ 发布文章</Link>
-          <Link href="/admin/pilot-lines" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88 }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>🏭 产线管理</Link>
-          <Link href="/admin/bookings" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88 }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>📅 预约管理</Link>
-          <Link href="/admin/categories" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88 }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>📁 分类管理</Link>
-          <Link href="/" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, marginTop: 16 }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>🌐 返回前台</Link>
+          {navLinks.map(link => (
+            <Link key={link.href} href={link.href} style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, textDecoration: 'none', display: 'block' }}>{link.label}</Link>
+          ))}
+          <Link href="/" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, marginTop: 16, textDecoration: 'none', display: 'block' }}>🌐 返回前台</Link>
         </nav>
       </aside>
       <main style={{ flex: 1, padding: 32, background: '#F3F4F6', overflowY: 'auto' }}>
