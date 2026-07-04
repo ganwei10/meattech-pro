@@ -1,8 +1,8 @@
 import nodemailer from 'nodemailer';
 import { prisma } from './prisma';
 
-// 发送邮件通知
-export async function sendEmailNotification(subject: string, html: string): Promise<boolean> {
+// 发送邮件通知（支持指定收件人）
+export async function sendEmailNotification(subject: string, html: string, to?: string): Promise<boolean> {
   try {
     const settings = await prisma.setting.findMany({
       where: { key: { in: ['notify_email', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from'] } },
@@ -10,7 +10,7 @@ export async function sendEmailNotification(subject: string, html: string): Prom
     const config: Record<string, string> = {};
     settings.forEach(s => { config[s.key] = s.value; });
 
-    const toEmail = config['notify_email'];
+    const toEmail = to || config['notify_email'];
     if (!toEmail) return false;
 
     // 如果配置了 SMTP，使用配置的 SMTP；否则使用控制台输出（开发模式）
