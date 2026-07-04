@@ -1,0 +1,204 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  const logs: string[] = [];
+
+  try {
+    // 1. Create Additive table
+    logs.push('Creating Additive table...');
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Additive" (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        alias TEXT NOT NULL DEFAULT '',
+        "casNumber" TEXT,
+        "functionClass" TEXT NOT NULL,
+        "maxLimit" TEXT NOT NULL,
+        "foodCategory" TEXT NOT NULL,
+        remarks TEXT NOT NULL DEFAULT '',
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    logs.push('Additive table OK');
+
+    // 2. Create TroubleshootNode table
+    logs.push('Creating TroubleshootNode table...');
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "TroubleshootNode" (
+        id SERIAL PRIMARY KEY,
+        category TEXT NOT NULL,
+        question TEXT NOT NULL,
+        options TEXT NOT NULL,
+        "isLeaf" BOOLEAN NOT NULL DEFAULT false,
+        advice TEXT,
+        "parentId" INTEGER,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    logs.push('TroubleshootNode table OK');
+
+    // 3. Add missing columns to PilotLine
+    logs.push('Adding PilotLine.capacity...');
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "capacity" TEXT NOT NULL DEFAULT ''`);
+      logs.push('PilotLine.capacity OK');
+    } catch (e) {
+      logs.push('PilotLine.capacity already exists or skip');
+    }
+
+    // 4. Add missing columns to User
+    logs.push('Adding User.phone/company...');
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "company" TEXT`);
+      logs.push('User columns OK');
+    } catch (e) {
+      logs.push('User columns already exist or skip');
+    }
+
+    // 5. Add missing columns to Booking
+    logs.push('Adding Booking columns...');
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "contactEmail" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "experimentType" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "preferredDate" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'PENDING'`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "adminNote" TEXT NOT NULL DEFAULT ''`);
+      logs.push('Booking columns OK');
+    } catch (e) {
+      logs.push('Booking columns already exist or skip');
+    }
+
+    // 6. Create Setting table
+    logs.push('Creating Setting table...');
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Setting" (
+        id SERIAL PRIMARY KEY,
+        key TEXT NOT NULL UNIQUE,
+        value TEXT NOT NULL
+      )
+    `);
+    logs.push('Setting table OK');
+
+    // 7. Seed admin user
+    logs.push('Seeding admin user...');
+    const existingAdmin = await prisma.user.findUnique({ where: { email: 'admin@meattech.pro' } });
+    if (!existingAdmin) {
+      await prisma.user.create({
+        data: {
+          email: 'admin@meattech.pro',
+          password: bcrypt.hashSync('admin123', 10),
+          name: '平台管理员',
+          role: 'ADMIN',
+        },
+      });
+      logs.push('Admin user created');
+    } else {
+      logs.push('Admin user already exists');
+    }
+
+    // 8. Seed categories
+    logs.push('Seeding categories...');
+    const categories = [
+      { name: '中式酱卤肉制品', slug: 'chinese-braised', icon: 'folder', order: 1 },
+      { name: '西式低温熏煮肉制品', slug: 'western-smoked', icon: 'folder', order: 2 },
+      { name: '速冻调制肉制品（预制菜）', slug: 'frozen-prepared', icon: 'folder', order: 3 },
+      { name: '发酵与肉干制品', slug: 'fermented-dried', icon: 'folder', order: 4 },
+    ];
+    for (const cat of categories) {
+      const existing = await prisma.category.findUnique({ where: { slug: cat.slug } });
+      if (!existing) await prisma.category.create({ data: cat });
+    }
+    logs.push('Categories OK');
+
+    // 9. Seed additives
+    logs.push('Seeding additives...');
+    const additiveCount = await prisma.additive.count();
+    if (additiveCount === 0) {
+      const additives = [
+        { name: '亚硝酸钠', alias: '亚硝酸盐', casNumber: '7632-00-0', functionClass: '护色剂', maxLimit: '0.15 g/kg', foodCategory: '腌制肉制品类、酱卤肉制品类', remarks: '以亚硝酸钠计，残留量≤30mg/kg' },
+        { name: '脱氢乙酸钠', alias: '脱氢醋酸钠', casNumber: '4418-26-2', functionClass: '防腐剂', maxLimit: '0.3 g/kg', foodCategory: '发酵肉制品类、预制肉制品类', remarks: '以脱氢乙酸计' },
+        { name: 'D-异抗坏血酸钠', alias: '异VC钠', casNumber: '6381-77-7', functionClass: '抗氧化剂', maxLimit: '1.0 g/kg', foodCategory: '预制肉制品、腌制肉制品', remarks: '以抗坏血酸计' },
+        { name: '乳酸钠', alias: '', casNumber: '72-17-3', functionClass: '水分保持剂', maxLimit: '按生产需要适量使用', foodCategory: '生湿面制品、肉制品', remarks: 'GMP原则，无具体限量' },
+        { name: '山梨酸钾', alias: '山梨酸盐', casNumber: '24634-61-5', functionClass: '防腐剂', maxLimit: '0.075 g/kg', foodCategory: '肉灌肠类', remarks: '以山梨酸计' },
+        { name: '红曲红', alias: '红曲色素', casNumber: null, functionClass: '着色剂', maxLimit: '按生产需要适量使用', foodCategory: '熟肉制品、腌制肉制品', remarks: '天然色素，GMP原则' },
+        { name: '卡拉胶', alias: '鹿角藻胶', casNumber: '9000-07-1', functionClass: '增稠剂', maxLimit: '按生产需要适量使用', foodCategory: '肉制品', remarks: '需标注' },
+        { name: '海藻酸钠', alias: '褐藻酸钠', casNumber: '9005-38-3', functionClass: '增稠剂', maxLimit: '按生产需要适量使用', foodCategory: '肉制品', remarks: '常与卡拉胶复配使用' },
+        { name: '乳酸链球菌素', alias: 'Nisin', casNumber: '1414-45-5', functionClass: '防腐剂', maxLimit: '0.5 g/kg', foodCategory: '肉制品', remarks: '生物防腐剂，天然发酵产物' },
+        { name: '谷氨酰胺转氨酶', alias: 'TG酶', casNumber: '80146-85-6', functionClass: '稳定剂和凝固剂', maxLimit: '按生产需要适量使用', foodCategory: '肉制品', remarks: '可改善肉质结构' },
+      ];
+      for (const a of additives) {
+        await prisma.additive.create({ data: a });
+      }
+      logs.push(`Seeded ${additives.length} additives`);
+    } else {
+      logs.push(`Additives already seeded (${additiveCount})`);
+    }
+
+    // 10. Seed troubleshoot nodes
+    logs.push('Seeding troubleshoot nodes...');
+    const nodeCount = await prisma.troubleshootNode.count();
+    if (nodeCount === 0) {
+      const nodes = [
+        { category: '出水/汁液流失', question: '产品出水发生在哪个环节？', options: JSON.stringify([{ text: '蒸煮后冷却阶段出水', nextNodeId: 2 }, { text: '切片/包装时出水', nextNodeId: 3 }, { text: '储存/货架期出水', nextNodeId: 4 }]), isLeaf: false },
+        { category: '出水/汁液流失', question: '蒸煮后冷却阶段出水，检查蒸煮中心温度是否达标？', options: JSON.stringify([{ text: '中心温度未达到72℃', nextNodeId: 5 }, { text: '中心温度已达标(≥72℃)', nextNodeId: 6 }]), isLeaf: false },
+        { category: '出水/汁液流失', question: '切片出水通常与降温速率有关，核心降温速率是否≤4℃/h？', options: JSON.stringify([{ text: '降温速率过慢', nextNodeId: 7 }, { text: '降温速率正常', nextNodeId: 6 }]), isLeaf: false },
+        { category: '出水/汁液流失', question: '货架期出水可能与包装阻隔性有关，是否使用高阻隔包装膜？', options: JSON.stringify([{ text: '是，使用高阻隔膜', nextNodeId: 6 }, { text: '否，普通包装膜', nextNodeId: 8 }]), isLeaf: false },
+        { category: '出水/汁液流失', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：蒸煮F值不足</strong><br/>中心温度未达到72℃导致蛋白质变性不充分，持水网络未完全形成。<br/><strong>建议：</strong><br/>1. 提高蒸煮温度或延长蒸煮时间，确保中心温度≥72℃<br/>2. 检查蒸煮炉温度均匀性<br/>3. 校准中心温度探针精度' },
+        { category: '出水/汁液流失', question: '检查滚揉工艺参数', options: JSON.stringify([{ text: '滚揉真空度≥-0.08MPa', nextNodeId: 9 }, { text: '滚揉真空度不足', nextNodeId: 10 }]), isLeaf: false },
+        { category: '出水/汁液流失', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：降温速率不足</strong><br/>核心降温速率过慢导致冰晶粗大，破坏蛋白质凝胶结构。<br/><strong>建议：</strong><br/>1. 增加冷却水流量或降低水温<br/>2. 缩短产品从蒸煮到冷却的转移时间<br/>3. 考虑使用液氮速冻替代常规冷却' },
+        { category: '出水/汁液流失', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：包装阻隔性不足</strong><br/>普通包装膜透水率高，导致货架期水分蒸发冷凝。<br/><strong>建议：</strong><br/>1. 更换7层共挤高阻隔膜(EVOH)<br/>2. 采用气调包装(70%N₂+30%CO₂)<br/>3. 检查封口完整性' },
+        { category: '出水/汁液流失', question: '检查盐水注射率', options: JSON.stringify([{ text: '注射率≤20%', nextNodeId: 6 }, { text: '注射率>20%', nextNodeId: 11 }]), isLeaf: false },
+        { category: '出水/汁液流失', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：滚揉真空度不足</strong><br/>真空度不够导致肌原纤维蛋白提取不充分，持水性下降。<br/><strong>建议：</strong><br/>1. 检查真空泵性能，确保真空度≥-0.08MPa<br/>2. 检查滚揉筒密封圈<br/>3. 适当延长滚揉时间（总时间≥4h）' },
+        { category: '出水/汁液流失', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：盐水注射率过高</strong><br/>注射率超过20%时，蛋白质网络无法有效束缚多余水分。<br/><strong>建议：</strong><br/>1. 将注射率控制在15-20%<br/>2. 添加0.3%复配磷酸盐提升持水<br/>3. 考虑使用滚揉替代部分注射' },
+        { category: '出油/脂肪游离', question: '出油发生在哪个阶段？', options: JSON.stringify([{ text: '蒸煮过程中出油', nextNodeId: 13 }, { text: '成品切片时出油', nextNodeId: 14 }]), isLeaf: false },
+        { category: '出油/脂肪游离', question: '蒸煮升温速率是否过快？', options: JSON.stringify([{ text: '升温速率>3℃/min', nextNodeId: 15 }, { text: '升温速率正常', nextNodeId: 16 }]), isLeaf: false },
+        { category: '出油/脂肪游离', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：降温过程中脂肪结晶粗大</strong><br/>切片时脂肪融化溢出。<br/><strong>建议：</strong><br/>1. 提高降温速率，快速通过脂肪结晶温度带<br/>2. 切片前确保产品中心温度≤4℃<br/>3. 检查脂肪原料新鲜度' },
+        { category: '出油/脂肪游离', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：蒸煮升温过快</strong><br/>升温速率过快导致脂肪细胞破裂，油脂游离。<br/><strong>建议：</strong><br/>1. 采用阶梯式升温：55℃→65℃→75℃<br/>2. 每段升温速率≤2℃/min<br/>3. 增加中间持温段' },
+        { category: '出油/脂肪游离', question: '脂肪原料是否预处理？', options: JSON.stringify([{ text: '未预处理', nextNodeId: 17 }, { text: '已预处理', nextNodeId: 18 }]), isLeaf: false },
+        { category: '出油/脂肪游离', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：脂肪未预冷处理</strong><br/>脂肪直接使用导致斩拌中温度升高过快。<br/><strong>建议：</strong><br/>1. 脂肪预冷至-4~-2℃后再投入斩拌<br/>2. 斩拌过程中加冰屑控温<br/>3. 斩拌终温控制在≤8℃' },
+        { category: '出油/脂肪游离', question: '', options: '[]', isLeaf: true, advice: '<strong>排查完成：基础工艺正常</strong><br/>建议检查：<br/>1. 脂肪与瘦肉比例是否合理（建议≤30%）<br/>2. 乳化剂添加量是否足够<br/>3. 灌装压力是否过大' },
+        { category: '切片散碎', question: '切片散碎的方向是？', options: JSON.stringify([{ text: '纵向断裂（沿纤维方向）', nextNodeId: 20 }, { text: '横向断裂（垂直纤维方向）', nextNodeId: 21 }]), isLeaf: false },
+        { category: '切片散碎', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：凝胶强度不足</strong><br/>纵向断裂通常因蛋白质凝胶网络不完整。<br/><strong>建议：</strong><br/>1. 检查滚揉是否充分（提取盐溶蛋白）<br/>2. 确保腌制时间≥12h<br/>3. 添加0.2%大豆分离蛋白增强凝胶' },
+        { category: '切片散碎', question: '产品冷却是否充分？', options: JSON.stringify([{ text: '中心温度≤4℃', nextNodeId: 22 }, { text: '中心温度>4℃', nextNodeId: 23 }]), isLeaf: false },
+        { category: '切片散碎', question: '', options: '[]', isLeaf: true, advice: '<strong>基础工艺正常</strong><br/>建议检查：<br/>1. 切片刀锋利度和转速<br/>2. 切片厚度设置<br/>3. 添加结着剂（如TG酶）改善切片性' },
+        { category: '切片散碎', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：冷却不充分</strong><br/>产品中心温度过高时切片，凝胶尚未完全定型。<br/><strong>建议：</strong><br/>1. 确保切片前中心温度≤4℃<br/>2. 延长冷却时间<br/>3. 检查冷库温度是否达标（≤0℃）' },
+        { category: '色泽异常', question: '色泽异常的具体表现？', options: JSON.stringify([{ text: '色泽发暗/偏黑', nextNodeId: 25 }, { text: '色泽发白/偏浅', nextNodeId: 26 }, { text: '色泽不均匀', nextNodeId: 27 }]), isLeaf: false },
+        { category: '色泽异常', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：亚硝酸盐用量异常或美拉德反应过度</strong><br/><strong>建议：</strong><br/>1. 校验亚硝酸钠添加量（≤0.15g/kg）<br/>2. 检查残留量是否在30mg/kg以内<br/>3. 降低烟熏温度/时间，防止过度美拉德反应<br/>4. 检查原料肉新鲜度' },
+        { category: '色泽异常', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：发色不充分或亚硝酸盐不足</strong><br/><strong>建议：</strong><br/>1. 检查亚硝酸钠添加量是否达标<br/>2. 延长发色时间（腌制≥12h）<br/>3. 确保腌制温度2-4℃<br/>4. 添加D-异抗坏血酸钠（0.05%）助发色' },
+        { category: '色泽异常', question: '', options: '[]', isLeaf: true, advice: '<strong>原因：原料差异或加工不均匀</strong><br/><strong>建议：</strong><br/>1. 统一原料肉来源和批次<br/>2. 确保滚揉均匀（间歇式滚揉，正反转交替）<br/>3. 检查蒸煮温度均匀性<br/>4. 控制产品直径一致' },
+      ];
+      for (const n of nodes) {
+        await prisma.troubleshootNode.create({ data: n });
+      }
+      logs.push(`Seeded ${nodes.length} troubleshoot nodes`);
+    } else {
+      logs.push(`Troubleshoot nodes already seeded (${nodeCount})`);
+    }
+
+    // 11. Update PilotLine with capacity if missing
+    logs.push('Updating pilot lines with capacity...');
+    const pilotLines = await prisma.pilotLine.findMany();
+    const capacityMap: Record<string, string> = {
+      '120L 真空斩拌机': '120kg/批次',
+      '连续式全自动烟熏炉': '500kg/h',
+      '液氮速冻隧道产线': '2t/h',
+    };
+    for (const pl of pilotLines) {
+      if (!pl.capacity && capacityMap[pl.name]) {
+        await prisma.pilotLine.update({ where: { id: pl.id }, data: { capacity: capacityMap[pl.name] } });
+      }
+    }
+    logs.push('Pilot lines capacity OK');
+
+    logs.push('=== Setup completed successfully ===');
+    return NextResponse.json({ success: true, logs });
+  } catch (error) {
+    logs.push(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
+    return NextResponse.json({ success: false, logs, error: error instanceof Error ? error.message : String(error) }, { status: 500 });
+  }
+}
