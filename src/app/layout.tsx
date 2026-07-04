@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'MeatTech Pro — 工业化肉制品研发与智能中试平台',
   description: '让每一公斤肉发挥最大价值 —— 工业化肉制品研发与智能中试平台。商超爆款逆向研发、硬核肉品科学、共享中试产线在线预约。',
