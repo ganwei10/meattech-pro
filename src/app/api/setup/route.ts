@@ -822,14 +822,29 @@ export async function GET() {
         const existingQA = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "Post" WHERE slug LIKE 'qa-%' LIMIT 1`;
         if (existingQA.length === 0) {
           const qaItems = getQAItems();
+          let seeded = 0;
           for (const item of qaItems) {
-            const daysAgo = Math.floor(Math.random() * 30);
-            await prisma.$executeRawUnsafe(
-              `INSERT INTO "Post" (title, slug, excerpt, content, author, tags, status, "categoryId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, 'PUBLISHED', $7, NOW() - INTERVAL '${daysAgo} days', NOW() - INTERVAL '${daysAgo} days') ON CONFLICT (slug) DO NOTHING`,
-              item.title, item.slug, item.excerpt, item.content, item.author, item.tags, qaCategory.id
-            );
+            try {
+              const daysAgo = Math.floor(Math.random() * 30);
+              const createdDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+              await prisma.post.create({
+                data: {
+                  title: item.title,
+                  slug: item.slug,
+                  excerpt: item.excerpt,
+                  content: item.content,
+                  author: item.author,
+                  tags: item.tags,
+                  status: 'PUBLISHED',
+                  categoryId: qaCategory.id,
+                  createdAt: createdDate,
+                  updatedAt: createdDate,
+                },
+              });
+              seeded++;
+            } catch (e) { /* skip individual errors */ }
           }
-          logs.push(`Seeded ${qaItems.length} Q&A posts`);
+          logs.push(`Seeded ${seeded} Q&A posts (out of ${qaItems.length})`);
         } else {
           logs.push('Q&A posts already seeded');
         }
