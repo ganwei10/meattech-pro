@@ -84,7 +84,8 @@ export default function SettingsPage() {
         try { setSources(JSON.parse(data.article_sources)); } catch {}
       }
       // 加载模板
-      if (data.email_template_confirmed) setEmailTemplates(prev => ({ ...prev, confirmed: data.email_template_confirmed }));
+      let templatesLoaded = false;
+      if (data.email_template_confirmed) { setEmailTemplates(prev => ({ ...prev, confirmed: data.email_template_confirmed })); templatesLoaded = true; }
       if (data.email_template_cancelled) setEmailTemplates(prev => ({ ...prev, cancelled: data.email_template_cancelled }));
       if (data.email_template_in_progress) setEmailTemplates(prev => ({ ...prev, in_progress: data.email_template_in_progress }));
       if (data.email_template_completed) setEmailTemplates(prev => ({ ...prev, completed: data.email_template_completed }));
@@ -92,6 +93,28 @@ export default function SettingsPage() {
       if (data.sms_template_cancelled) setSmsTemplates(prev => ({ ...prev, cancelled: data.sms_template_cancelled }));
       if (data.sms_template_in_progress) setSmsTemplates(prev => ({ ...prev, in_progress: data.sms_template_in_progress }));
       if (data.sms_template_completed) setSmsTemplates(prev => ({ ...prev, completed: data.sms_template_completed }));
+      
+      // 如果模板为空，初始化默认模板
+      if (!templatesLoaded) {
+        await fetch('/api/admin/settings', { method: 'PUT' });
+        // 重新加载
+        const res2 = await fetch('/api/admin/settings');
+        if (res2.ok) {
+          const data2 = await res2.json();
+          setEmailTemplates({
+            confirmed: data2.email_template_confirmed || '',
+            cancelled: data2.email_template_cancelled || '',
+            in_progress: data2.email_template_in_progress || '',
+            completed: data2.email_template_completed || '',
+          });
+          setSmsTemplates({
+            confirmed: data2.sms_template_confirmed || '',
+            cancelled: data2.sms_template_cancelled || '',
+            in_progress: data2.sms_template_in_progress || '',
+            completed: data2.sms_template_completed || '',
+          });
+        }
+      }
     }
   };
 
