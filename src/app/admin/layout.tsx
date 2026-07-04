@@ -2,10 +2,8 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -35,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!pathname) return;
     if (pathname.startsWith('/admin/bookings') || pathname.startsWith('/admin/bills') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/reports') || pathname.startsWith('/admin/pilot-lines')) {
       setExpandedSection('pilot');
-    } else if (pathname.startsWith('/admin/posts') || pathname.startsWith('/admin/categories')) {
+    } else if (pathname.startsWith('/admin/posts') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/media') || pathname.startsWith('/admin/products') || pathname.startsWith('/admin/homepage')) {
       setExpandedSection('content');
     }
   }, [pathname]);
@@ -190,6 +188,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   background: isActive('/admin/posts') ? 'rgba(255,255,255,0.12)' : 'transparent',
                   textDecoration: 'none', display: 'block'
                 }}>📝 文章管理</Link>
+                <Link href="/admin/products" onClick={() => setPathname('/admin/products')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/products') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📦 商超爆款</Link>
                 <Link href="/admin/media" onClick={() => setPathname('/admin/media')} style={{
                   padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
                   background: isActive('/admin/media') ? 'rgba(255,255,255,0.12)' : 'transparent',
@@ -200,6 +203,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   background: isActive('/admin/categories') ? 'rgba(255,255,255,0.12)' : 'transparent',
                   textDecoration: 'none', display: 'block'
                 }}>📁 分类管理</Link>
+                <Link href="/admin/homepage" onClick={() => setPathname('/admin/homepage')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/homepage') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>🏠 首页管理</Link>
               </div>
             )}
           </div>

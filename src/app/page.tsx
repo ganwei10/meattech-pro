@@ -6,18 +6,42 @@ import Footer from '@/components/Footer';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [featuredPosts, categories, products, pilotLines] = await Promise.all([
+  const [featuredPosts, categories, products, pilotLines, carouselSetting, industrySetting] = await Promise.all([
     prisma.post.findMany({ where: { status: 'PUBLISHED', featured: true }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 3 }),
     prisma.category.findMany({ orderBy: { order: 'asc' }, include: { _count: { select: { posts: true } } } }),
-    prisma.product.findMany({ where: { status: 'PUBLISHED' }, orderBy: { createdAt: 'desc' } }),
+    prisma.product.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }] }),
     prisma.pilotLine.findMany({ orderBy: { createdAt: 'desc' } }),
+    prisma.setting.findUnique({ where: { key: 'homepage_carousel' } }),
+    prisma.setting.findUnique({ where: { key: 'homepage_industry' } }),
   ]);
 
-  const carouselItems = [
-    { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方' },
-    ...(featuredPosts[0] ? [{ tag: '技术前沿', title: featuredPosts[0].title.slice(0, 20) + '...', desc: featuredPosts[0].excerpt.slice(0, 60) + '...', bg: 'carousel-bg-2', btn: '阅读完整技术报告' }] : []),
-    { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约' },
-  ];
+  // Parse carousel settings, fallback to defaults
+  let carouselItems: any[] = [];
+  try {
+    carouselItems = carouselSetting ? JSON.parse(carouselSetting.value) : [];
+  } catch { carouselItems = []; }
+  if (carouselItems.length === 0) {
+    carouselItems = [
+      { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: '' },
+      { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/tool/pilot-map' },
+    ];
+  }
+  // Add featured post as carousel item if available
+  if (featuredPosts[0]) {
+    carouselItems.splice(1, 0, { tag: '技术前沿', title: featuredPosts[0].title.slice(0, 20) + '...', desc: featuredPosts[0].excerpt.slice(0, 60) + '...', bg: 'carousel-bg-2', btn: '阅读完整技术报告', link: `/article/${featuredPosts[0].slug}` });
+  }
+
+  // Parse industry settings, fallback to defaults
+  let industryItems: any[] = [];
+  try {
+    industryItems = industrySetting ? JSON.parse(industrySetting.value) : [];
+  } catch { industryItems = []; }
+  if (industryItems.length === 0) {
+    industryItems = [
+      { icon: '⚙️', tag: '机械选型', tagBg: '#DBEAFE', tagColor: '#1E40AF', title: '汇川/西门子 PLC 控制系统在现代化高速斩拌机中的温度精准控制实践', desc: '对比汇川H3U系列与西门子S7-1200在高速斩拌机（6000rpm）刀盘温度闭环控制中的响应精度与稳定性表现，涵盖PID参数整定方法、斩拌过程中的冰屑添加策略。' },
+      { icon: '📦', tag: '包装创新', tagBg: '#D1FAE5', tagColor: '#065F46', title: '莫迪维克（Multivac）高阻隔气调包装对低温冷鲜肉货架期延长突破', desc: '基于Multivac R245封口机平台，测试70%O₂+30%CO₂气调配比下，不同阻隔膜对低温冷鲜猪肉货架期的影响。7层共挤膜可将货架期从12天延长至21天。' },
+    ];
+  }
 
   const banners = ['banner-1', 'banner-2', 'banner-3'];
   const bannersMap: Record<string, string> = { '气调预制菜': 'banner-1', '低温调理肉': 'banner-2', '休闲及其他': 'banner-3' };
@@ -41,7 +65,11 @@ export default async function HomePage() {
                     <span className="carousel-tag">{item.tag}</span>
                     <h3 className="carousel-title">{item.title}</h3>
                     <p className="carousel-desc">{item.desc}</p>
-                    <span className="carousel-btn">{item.btn} →</span>
+                    {item.link ? (
+                      <Link href={item.link} className="carousel-btn">{item.btn} →</Link>
+                    ) : (
+                      <span className="carousel-btn">{item.btn} →</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -215,20 +243,15 @@ export default async function HomePage() {
                 </div>
               </Link>
             ))}
-            <div className="industry-item">
-              <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: '#DBEAFE', color: '#2563EB' }}>⚙️</div>
-              <div>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: '#DBEAFE', color: '#1E40AF' }}>机械选型</span>汇川/西门子 PLC 控制系统在现代化高速斩拌机中的温度精准控制实践</h4>
-                <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>对比汇川H3U系列与西门子S7-1200在高速斩拌机（6000rpm）刀盘温度闭环控制中的响应精度与稳定性表现，涵盖PID参数整定方法、斩拌过程中的冰屑添加策略。</p>
+            {industryItems.map((item, i) => (
+              <div key={i} className="industry-item">
+                <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: item.tagBg, color: item.tagColor }}>{item.icon}</div>
+                <div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: item.tagBg, color: item.tagColor }}>{item.tag}</span>{item.title}</h4>
+                  <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{item.desc}</p>
+                </div>
               </div>
-            </div>
-            <div className="industry-item">
-              <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: '#D1FAE5', color: '#059669' }}>📦</div>
-              <div>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: '#D1FAE5', color: '#065F46' }}>包装创新</span>莫迪维克（Multivac）高阻隔气调包装对低温冷鲜肉货架期延长突破</h4>
-                <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>基于Multivac R245封口机平台，测试70%O₂+30%CO₂气调配比下，不同阻隔膜对低温冷鲜猪肉货架期的影响。7层共挤膜可将货架期从12天延长至21天。</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
