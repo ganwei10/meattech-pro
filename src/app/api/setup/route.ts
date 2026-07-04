@@ -278,20 +278,24 @@ export async function GET() {
       logs.push(`Troubleshoot nodes already seeded (${nodeCount})`);
     }
 
-    // 11. Update PilotLine with capacity if missing
+    // 11. Update PilotLine with capacity if missing (use raw SQL to avoid Prisma schema mismatch)
     logs.push('Updating pilot lines with capacity...');
-    const pilotLines = await prisma.pilotLine.findMany();
-    const capacityMap: Record<string, string> = {
-      '120L 真空斩拌机': '120kg/批次',
-      '连续式全自动烟熏炉': '500kg/h',
-      '液氮速冻隧道产线': '2t/h',
-    };
-    for (const pl of pilotLines) {
-      if (!pl.capacity && capacityMap[pl.name]) {
-        await prisma.pilotLine.update({ where: { id: pl.id }, data: { capacity: capacityMap[pl.name] } });
+    try {
+      const pilotLines = await prisma.$queryRaw<Array<{ id: number; name: string; capacity: string }>>`SELECT id, name, capacity FROM "PilotLine"`;
+      const capacityMap: Record<string, string> = {
+        '120L 真空斩拌机': '120kg/批次',
+        '连续式全自动烟熏炉': '500kg/h',
+        '液氮速冻隧道产线': '2t/h',
+      };
+      for (const pl of pilotLines) {
+        if (!pl.capacity && capacityMap[pl.name]) {
+          await prisma.$executeRawUnsafe(`UPDATE "PilotLine" SET capacity = $1 WHERE id = $2`, capacityMap[pl.name], pl.id);
+        }
       }
+      logs.push('Pilot lines capacity OK');
+    } catch (e) {
+      logs.push('Pilot lines capacity skip (columns may not exist yet)');
     }
-    logs.push('Pilot lines capacity OK');
 
     // 12. Add new columns to PilotLine (equipment, capabilities, contact info, pricing)
     logs.push('Adding new columns to PilotLine...');
