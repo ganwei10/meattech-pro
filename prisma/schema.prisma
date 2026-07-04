@@ -74,6 +74,9 @@ model PilotLine {
   specs             String   @default("")
   capacity          String   @default("")
   // 新增字段
+  type              String   @default("UNIVERSITY") // UNIVERSITY | PARK | ENTERPRISE
+  advantages        String   @default("") // 机构核心优势
+  cooperationModel  String   @default("") // 合作模式描述
   equipment         String   @default("") // 设备信息（JSON字符串或逗号分隔）
   capabilities      String   @default("") // 技术能力（JSON字符串或逗号分隔）
   contactPerson     String   @default("") // 联系人姓名

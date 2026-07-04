@@ -136,12 +136,12 @@ export default async function HomePage() {
           <div className="science-layout">
             <div className="category-tree">
               <h4 style={{ fontSize: '.9rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>📂 品类导航</h4>
-              {categories.map((cat, i) => (
-                <div key={cat.id} className={`tree-item ${i === 0 ? 'active' : ''}`}>
+              {categories.map((cat) => (
+                <Link key={cat.id} href={`/category/${cat.slug}`} className="tree-item" style={{ textDecoration: 'none', color: 'inherit' }}>
                   <span style={{ fontSize: '1.1rem' }}>{cat.icon === 'folder' ? '📂' : cat.icon}</span>
                   <span>{cat.name}</span>
                   <span className="count">{cat._count.posts}</span>
-                </div>
+                </Link>
               ))}
             </div>
             <div className="science-articles">
@@ -179,23 +179,48 @@ export default async function HomePage() {
             <h2 className="pilot-title">柔性中试中心 —— 在线预约你的肉品工业实验室</h2>
             <p className="pilot-sub">无需买设备，盘活全行业闲置产能，打造肉类行业的"药明康德（CRO）"</p>
           </div>
+
+          {/* 三类合作模式 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+            <Link href="/tool/pilot-map" style={{ background: 'linear-gradient(135deg, #DBEAFE 0%, #EFF6FF 100%)', borderRadius: 12, padding: 24, textDecoration: 'none', border: '1px solid #BFDBFE', transition: 'transform .2s' }}>
+              <div style={{ fontSize: '2rem', marginBottom: 8 }}>🎓</div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A8A', marginBottom: 6 }}>找专家、做大改动</h4>
+              <p style={{ fontSize: '.82rem', color: '#374151', lineHeight: 1.5, margin: 0 }}>引流到华南理工、华农、省农科院等高校科研院所，走CRO高客单价分成模式</p>
+            </Link>
+            <Link href="/tool/pilot-map" style={{ background: 'linear-gradient(135deg, #D1FAE5 0%, #ECFDF5 100%)', borderRadius: 12, padding: 24, textDecoration: 'none', border: '1px solid #A7F3D0', transition: 'transform .2s' }}>
+              <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏭</div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#065F46', marginBottom: 6 }}>初创品牌、预制菜试错</h4>
+              <p style={{ fontSize: '.82rem', color: '#374151', lineHeight: 1.5, margin: 0 }}>推荐到佛山顺德、肇庆高要等公共中试仓，走标准场租抽佣，政府扶持收费透明</p>
+            </Link>
+            <Link href="/tool/pilot-map" style={{ background: 'linear-gradient(135deg, #FEF3C7 0%, #FFFBEB 100%)', borderRadius: 12, padding: 24, textDecoration: 'none', border: '1px solid #FDE68A', transition: 'transform .2s' }}>
+              <div style={{ fontSize: '2rem', marginBottom: 8 }}>🧪</div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#92400E', marginBottom: 6 }}>调风味、做爆款逆向</h4>
+              <p style={{ fontSize: '.82rem', color: '#374151', lineHeight: 1.5, margin: 0 }}>撮合到IFF、奇华顿、安琪酵母等辅料巨头演示中心，辅料带货换取产线开放</p>
+            </Link>
+          </div>
+
           <div className="pilot-grid">
             <div className="pilot-card">
-              <h4>🗺️ 共享产线资源档期</h4>
-              <p style={{ fontSize: '.82rem', opacity: .7, marginBottom: '16px' }}>可按地区 / 设备类型筛选</p>
+              <h4>🗺️ 华南共享中试基地</h4>
+              <p style={{ fontSize: '.82rem', opacity: .7, marginBottom: '16px' }}>粤港澳大湾区 · 三类机构全覆盖</p>
               <div className="line-list">
-                {pilotLines.map((line) => (
-                  <div key={line.id} className="line-item">
+                {pilotLines.slice(0, 6).map((line) => (
+                  <Link key={line.id} href={`/booking/${line.id}`} className="line-item" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div className="line-info">
-                      <span className="line-region">{line.region}</span>
-                      <span className="line-name">{line.name}</span>
+                      <span className="line-region">
+                        {line.type === 'UNIVERSITY' ? '🎓' : line.type === 'PARK' ? '🏭' : line.type === 'ENTERPRISE' ? '🧪' : '📍'} {line.region}
+                      </span>
+                      <span className="line-name">{line.name.length > 20 ? line.name.slice(0, 20) + '...' : line.name}</span>
                     </div>
                     <span className={`line-status ${line.status === 'AVAILABLE' ? 'available' : 'booked'}`}>
                       ● {line.status === 'AVAILABLE' ? '有档期' : '需预约'}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
+              <Link href="/tool/pilot-map" style={{ display: 'block', textAlign: 'center', marginTop: 12, padding: '8px 0', background: 'rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontSize: '.85rem', fontWeight: 600, textDecoration: 'none' }}>
+                查看全部 {pilotLines.length} 家机构 →
+              </Link>
             </div>
             <div className="pilot-card">
               <h4>🎛️ 远程协同研发舱（数据孪生演示）</h4>
@@ -204,7 +229,7 @@ export default async function HomePage() {
                   <div className="live-badge"><span className="pulse"></span>LIVE</div>
                   <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
                     <div style={{ fontSize: '.95rem', fontWeight: 600, marginBottom: '6px' }}>正在进行：真空滚揉放大实验</div>
-                    <div style={{ fontSize: '.8rem', opacity: .7 }}>华北区·中试基地 B-03 产线</div>
+                    <div style={{ fontSize: '.8rem', opacity: .7 }}>华南区·华南理工中试基地</div>
                   </div>
                 </div>
                 <div className="data-panel">

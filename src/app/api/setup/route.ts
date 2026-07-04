@@ -200,19 +200,24 @@ export async function GET() {
       logs.push('Admin user already exists');
     }
 
-    // 8. Seed categories
+    // 8. Seed categories (upsert to update existing + add new ones)
     logs.push('Seeding categories...');
     const categories = [
-      { name: '中式酱卤肉制品', slug: 'chinese-braised', icon: 'folder', order: 1 },
-      { name: '西式低温熏煮肉制品', slug: 'western-smoked', icon: 'folder', order: 2 },
-      { name: '速冻调制肉制品（预制菜）', slug: 'frozen-prepared', icon: 'folder', order: 3 },
-      { name: '发酵与肉干制品', slug: 'fermented-dried', icon: 'folder', order: 4 },
+      { name: '中式酱卤肉制品', slug: 'chinese-braised', icon: '🍖', order: 1 },
+      { name: '西式低温熏煮肉制品', slug: 'western-smoked', icon: '🥓', order: 2 },
+      { name: '速冻调制肉制品（预制菜）', slug: 'frozen-prepared', icon: '🥟', order: 3 },
+      { name: '发酵与肉干制品', slug: 'fermented-dried', icon: '🧀', order: 4 },
+      { name: '工艺问题', slug: 'process-issues', icon: '🔧', order: 5 },
+      { name: '产品制作', slug: 'product-making', icon: '🍳', order: 6 },
     ];
     for (const cat of categories) {
-      const existing = await prisma.category.findUnique({ where: { slug: cat.slug } });
-      if (!existing) await prisma.category.create({ data: cat });
+      await prisma.category.upsert({
+        where: { slug: cat.slug },
+        create: cat,
+        update: { name: cat.name, icon: cat.icon, order: cat.order },
+      });
     }
-    logs.push('Categories OK');
+    logs.push(`Categories OK (${categories.length} categories)`);
 
     // 9. Seed additives
     logs.push('Seeding additives...');
@@ -310,6 +315,9 @@ export async function GET() {
       await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "serviceFeePercent" DOUBLE PRECISION NOT NULL DEFAULT 5`);
       await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "description" TEXT NOT NULL DEFAULT ''`);
       await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "images" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "type" TEXT NOT NULL DEFAULT 'UNIVERSITY'`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "advantages" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "cooperationModel" TEXT NOT NULL DEFAULT ''`);
       await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3)`);
       // Update updatedAt for existing records
       await prisma.$executeRawUnsafe(`UPDATE "PilotLine" SET "updatedAt" = "createdAt" WHERE "updatedAt" IS NULL`);
@@ -317,6 +325,148 @@ export async function GET() {
     } catch (e) {
       logs.push('PilotLine new columns already exist or skip');
     }
+
+    // 12.5 Seed Pearl River Delta (粤港澳大湾区) pilot institutions
+    logs.push('Seeding PRD pilot institutions...');
+    const prdInstitutions = [
+      {
+        name: '华南理工大学 食品科学与工程学院',
+        region: '华南',
+        status: 'AVAILABLE',
+        type: 'UNIVERSITY',
+        specs: '中试车间：乳化斩拌、真空滚揉、超高压灭菌（HPP）',
+        capacity: '200kg/批次',
+        equipment: '乳化斩拌机,真空滚揉机,超高压灭菌设备(HPP),灌装机,蒸煮槽',
+        capabilities: '肉品现代加工,蛋白质改性,脂质氧化控制,清洁标签,减盐技术',
+        advantages: '华南地区食品界的黄埔军校。在肉品现代加工、蛋白质改性、脂质氧化控制方面全国领先。中试车间拥有先进的乳化斩拌、真空滚揉及超高压灭菌（HPP）等设备，非常适合高端肉制品的中试放大。',
+        cooperationModel: 'CRO高客单价分成：适合"找专家、做大改动"的高难度中试需求，如清洁标签、减盐、肉品保水机制等硬核改性研发。',
+        contactPerson: '科研对接办公室',
+        contactPhone: '020-8711xxxx',
+        contactEmail: 'food@scut.edu.cn',
+        pricePerDay: 8000,
+        serviceFeePercent: 10,
+        description: '华南理工大学食品科学与工程学院是华南地区食品科学与工程领域的顶尖学府，拥有国家级重点实验室。中试车间配备完整的乳化斩拌、真空滚揉、超高压灭菌（HPP）等先进设备，特别适合高端肉制品的工艺放大与硬核改性研究。',
+      },
+      {
+        name: '华南农业大学 食品学院',
+        region: '华南',
+        status: 'AVAILABLE',
+        type: 'UNIVERSITY',
+        specs: '畜禽产品加工中试生产线',
+        capacity: '300kg/批次',
+        equipment: '畜禽产品加工中试线,真空滚揉机,盐水注射机,烟熏炉,灌装机',
+        capabilities: '畜禽产品加工,中式酱卤肉制品,西式低温肉制品,工艺调试',
+        advantages: '畜禽产品加工是其传统强项，与温氏股份等肉企巨头有长期深度合作。拥有专门的畜禽产品加工中试生产线，对于中式酱卤肉制品、西式低温肉制品的工艺调试经验极其丰富。',
+        cooperationModel: 'CRO高客单价分成：适合需要深度工艺调试的中式酱卤、西式低温肉制品研发项目，可与温氏等产业资源对接。',
+        contactPerson: '学院科研办',
+        contactPhone: '020-8528xxxx',
+        contactEmail: 'food@scau.edu.cn',
+        pricePerDay: 6000,
+        serviceFeePercent: 10,
+        description: '华南农业大学食品学院在畜禽产品加工领域具有传统优势，与温氏股份等龙头企业长期合作。中试生产线覆盖从原料处理到成品包装全流程，对中式酱卤、西式低温肉制品的工艺调试经验丰富。',
+      },
+      {
+        name: '广东省农业科学院 蚕业与农产品加工研究所',
+        region: '华南',
+        status: 'AVAILABLE',
+        type: 'UNIVERSITY',
+        specs: '中试基地：预制菜、传统肉制品现代化',
+        capacity: '150kg/批次',
+        equipment: '广式腊味中试线,盐焗鸡工业化产线,真空包装机,烘干房',
+        capabilities: '预制菜,传统肉制品现代化,广式腊味,盐焗鸡工业化,专利转化',
+        advantages: '畜禽加工研究团队在预制菜、传统肉制品现代化（如广式腊味、盐焗鸡工业化）领域拥有大量专利。中试基地专门对外提供技术服务，商业化对接流程比高校更为灵活。',
+        cooperationModel: 'CRO高客单价分成 + 专利转化：适合传统肉制品工业化升级项目，可对接专利技术转化，流程比高校更灵活。',
+        contactPerson: '技术服务中心',
+        contactPhone: '020-8723xxxx',
+        contactEmail: 'gdaas@vip.163.com',
+        pricePerDay: 5000,
+        serviceFeePercent: 10,
+        description: '广东省农科院蚕业与农产品加工研究所在预制菜和传统肉制品现代化领域拥有大量专利技术，中试基地对外开放提供技术服务，商业化对接流程灵活高效。特别适合广式腊味、盐焗鸡等传统肉制品的工业化升级项目。',
+      },
+      {
+        name: '佛山顺德预制菜产业园 公共中试平台',
+        region: '华南',
+        status: 'AVAILABLE',
+        type: 'PARK',
+        specs: '工业级调理肉制品、速冻肉类中试线（含液氮速冻隧道）',
+        capacity: '500kg/h',
+        equipment: '液氮速冻隧道,真空包装机,调理肉制品中试线,速冻肉类中试线',
+        capabilities: '调理肉制品,速冻肉类,预制菜,轻资产研发',
+        advantages: '佛山顺德作为"世界美食之都"，近年来大力打造预制菜。公共服务平台配备了工业级的调理肉制品、速冻肉类中试线，重点解决中小微餐饮品牌"无钱建产线、大厂不给代工"的痛点。',
+        cooperationModel: '标准场租抽佣：适合初创品牌、预制菜试错需求。政府考核产线闲置率指标，非常欢迎平台带客，收费公开透明。',
+        contactPerson: '产业园管委会',
+        contactPhone: '0757-2283xxxx',
+        contactEmail: 'sdypc@shunde.gov.cn',
+        pricePerDay: 3000,
+        serviceFeePercent: 8,
+        description: '佛山顺德预制菜产业园是"世界美食之都"顺德重点打造的预制菜产业平台。公共中试平台配备工业级调理肉制品、速冻肉类中试线（含液氮速冻隧道、真空包装机等），专为中小微品牌解决"无钱建产线、大厂不给代工"的痛点。收费公开透明，对中小企业非常友好。',
+      },
+      {
+        name: '肇庆（高要）预制菜产业园 公共中试仓',
+        region: '华南',
+        status: 'AVAILABLE',
+        type: 'PARK',
+        specs: '全套柔性设备：原料处理→斩拌→灌装→熟制→速冻包装',
+        capacity: '400kg/h',
+        equipment: '原料处理设备,斩拌机,灌装机,熟制设备,速冻包装线',
+        capabilities: '预制菜,柔性中试,中央厨房研发,全流程打样',
+        advantages: '建设有专门的"预制菜公共中试仓"，提供从原料处理、斩拌、灌装、熟制到速冻包装的全套柔性设备，旨在打造粤港澳大湾区的"中央厨房研发总部"。',
+        cooperationModel: '标准场租抽佣：适合初创品牌的全流程打样需求，政府扶持平台，产线柔性高，可快速切换产品品类。',
+        contactPerson: '高要产业园运营办',
+        contactPhone: '0758-839xxxx',
+        contactEmail: 'gyypc@zhaoqing.gov.cn',
+        pricePerDay: 2500,
+        serviceFeePercent: 8,
+        description: '肇庆（高要）预制菜产业园公共中试仓是粤港澳大湾区"中央厨房研发总部"的核心载体。提供从原料处理、斩拌、灌装、熟制到速冻包装的全套柔性设备，专为预制菜企业提供低成本、高效率的中试打样服务。',
+      },
+      {
+        name: 'IFF（国际香精香料）华南研发中心 / 奇华顿广州应用中心',
+        region: '华南',
+        status: 'AVAILABLE',
+        type: 'ENTERPRISE',
+        specs: '应用研发中心/演示厨房（Demo Center）：全套微型工业肉机',
+        capacity: '50kg/批次',
+        equipment: '微型工业肉机,风味调试设备,感官评价室,质构分析仪',
+        capabilities: '风味调试,多汁性改良,保质期优化,爆款逆向,快速打样',
+        advantages: '全球顶级的原辅料巨头，在广州及周边设有强大的技术应用实验室。拥有全套微型工业肉机，专门帮客户调试肉制品的风味、多汁性和保质期。使用其辅料时，中试线常可提供极大优惠甚至免费。',
+        cooperationModel: '辅料带货+产线开放：适合"调风味、做爆款逆向"需求。平台帮辅料商带货，换取对用户的产线开放权，用户使用指定辅料可享优惠甚至免费中试。',
+        contactPerson: '应用技术部',
+        contactPhone: '020-3819xxxx',
+        contactEmail: 'apac-app@iff.com',
+        pricePerDay: 4000,
+        serviceFeePercent: 5,
+        description: 'IFF（国际香精香料）与奇华顿（Givaudan）作为全球顶级原辅料巨头，在广州设有强大的技术应用研发中心。配备全套微型工业肉机，专门协助客户调试肉制品的风味、多汁性和保质期。使用其辅料可享中试优惠甚至免费。适合爆款逆向和快速风味打样。',
+      },
+      {
+        name: '安琪酵母（东莞）应用技术中心',
+        region: '华南',
+        status: 'AVAILABLE',
+        type: 'ENTERPRISE',
+        specs: '应用技术中试车间：肉糜制品改良、减盐方案',
+        capacity: '100kg/批次',
+        equipment: '肉糜加工设备,质构测试仪,感官评价室,发酵监控设备',
+        capabilities: '肉制品减盐,肉糜制品爽脆度改良,潮州牛肉丸,鱼糜制品,酵母抽提物应用',
+        advantages: '安琪在珠三角布局极深。应用中心对肉制品减盐、肉糜制品（如潮州牛肉丸、鱼糜制品）的爽脆度改良有全套中试方案，车间对外开放度较高。',
+        cooperationModel: '辅料带货+产线开放：适合肉糜制品（牛肉丸、鱼糜等）的爽脆度改良和减盐项目。使用安琪酵母抽提物等辅料可享中试优惠。',
+        contactPerson: '应用技术部',
+        contactPhone: '0769-2241xxxx',
+        contactEmail: 'application@angel.com.cn',
+        pricePerDay: 3000,
+        serviceFeePercent: 5,
+        description: '安琪酵母（东莞）应用技术中心是安琪在珠三角的重要布局。专注肉制品减盐、肉糜制品（潮州牛肉丸、鱼糜制品）爽脆度改良等中试方案，车间对外开放度高。特别适合广东特色肉糜制品的研发打样。',
+      },
+    ];
+
+    for (const inst of prdInstitutions) {
+      const existing = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "PilotLine" WHERE name = ${inst.name}`;
+      if (existing.length === 0) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "PilotLine" (name, region, status, specs, capacity, type, advantages, "cooperationModel", equipment, capabilities, "contactPerson", "contactPhone", "contactEmail", "pricePerDay", "serviceFeePercent", description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+          inst.name, inst.region, inst.status, inst.specs, inst.capacity, inst.type, inst.advantages, inst.cooperationModel, inst.equipment, inst.capabilities, inst.contactPerson, inst.contactPhone, inst.contactEmail, inst.pricePerDay, inst.serviceFeePercent, inst.description
+        );
+      }
+    }
+    logs.push(`PRD institutions seed OK (${prdInstitutions.length} institutions)`);
 
     // 13. Create Bill table
     logs.push('Creating Bill table...');
