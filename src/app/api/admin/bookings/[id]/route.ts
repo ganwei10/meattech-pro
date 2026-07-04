@@ -45,6 +45,44 @@ export async function PATCH(
       include: { line: true },
     });
 
+    // 如果预约确认为 CONFIRMED，自动创建账单
+    if (status === 'CONFIRMED') {
+      try {
+        // 检查是否已有账单
+        const existingBill = await prisma.bill.findUnique({
+          where: { bookingId },
+        });
+
+        if (!existingBill) {
+          // 创建账单
+          const amount = booking.line.pricePerDay || 0;
+          const serviceFeePercent = booking.line.serviceFeePercent || 5;
+          const serviceFee = amount * (serviceFeePercent / 100);
+          const totalAmount = amount + serviceFee;
+
+          await prisma.bill.create({
+            data: {
+              bookingId,
+              lineId: booking.lineId,
+              customerName: booking.contactName,
+              customerPhone: booking.contactPhone,
+              customerEmail: booking.contactEmail,
+              company: booking.company,
+              amount,
+              serviceFee,
+              totalAmount,
+              status: 'PENDING',
+            },
+          });
+
+          console.log(`Bill auto-created for booking #${bookingId}`);
+        }
+      } catch (billError) {
+        console.error('Failed to auto-create bill:', billError);
+        // 不影响预约状态更新
+      }
+    }
+
     // 发送通知（使用模板）
     await sendBookingStatusNotification(booking, status, adminNote);
 

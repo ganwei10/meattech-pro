@@ -85,6 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/posts/new', label: '➕ 发布文章' },
     { href: '/admin/pilot-lines', label: '🏭 产线管理' },
     { href: '/admin/bookings', label: '📅 预约管理' },
+    { href: '/admin/bills', label: '📄 账单管理' },
     { href: '/admin/categories', label: '📁 分类管理' },
     { href: '/admin/settings', label: '⚙️ 系统设置' },
   ];
