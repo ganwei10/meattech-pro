@@ -6,7 +6,7 @@ interface CarouselItem {
   tag: string; title: string; desc: string; bg: string; btn: string; link: string;
 }
 interface IndustryItem {
-  icon: string; tag: string; tagBg: string; tagColor: string; title: string; desc: string;
+  icon: string; tag: string; tagBg: string; tagColor: string; title: string; desc: string; link: string;
 }
 
 export default function HomepageAdminPage() {
@@ -144,14 +144,18 @@ export default function HomepageAdminPage() {
                 <label style={{ display: 'block', marginBottom: 4, fontSize: '.85rem', fontWeight: 500 }}>标题</label>
                 <input type="text" value={item.title} onChange={e => { const arr = [...industry]; arr[i] = { ...item, title: e.target.value }; setIndustry(arr); }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: '.9rem', boxSizing: 'border-box' }} />
               </div>
-              <div>
+              <div style={{ marginBottom: 12 }}>
                 <label style={{ display: 'block', marginBottom: 4, fontSize: '.85rem', fontWeight: 500 }}>描述</label>
                 <textarea value={item.desc} onChange={e => { const arr = [...industry]; arr[i] = { ...item, desc: e.target.value }; setIndustry(arr); }} rows={3} style={{ width: '100%', padding: '6px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: '.9rem', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: '.85rem', fontWeight: 500 }}>跳转链接（可选，留空则不可点击）</label>
+                <input type="text" value={item.link || ''} onChange={e => { const arr = [...industry]; arr[i] = { ...item, link: e.target.value }; setIndustry(arr); }} placeholder="/article/xxx 或 /product/1" style={{ width: '100%', padding: '6px 10px', border: '1px solid #E5E7EB', borderRadius: 6, fontSize: '.9rem', boxSizing: 'border-box' }} />
               </div>
             </div>
           ))}
           <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={() => setIndustry([...industry, { icon: '🔬', tag: '新标签', tagBg: '#FEF3C7', tagColor: '#92400E', title: '新标题', desc: '描述内容' }])} style={{ padding: '8px 16px', background: '#059669', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>＋ 添加栏目</button>
+            <button onClick={() => setIndustry([...industry, { icon: '🔬', tag: '新标签', tagBg: '#FEF3C7', tagColor: '#92400E', title: '新标题', desc: '描述内容', link: '' }])} style={{ padding: '8px 16px', background: '#059669', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>＋ 添加栏目</button>
             <button onClick={saveIndustry} disabled={saving} style={{ padding: '8px 24px', background: '#1E3A8A', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>{saving ? '保存中...' : '💾 保存栏目'}</button>
           </div>
         </div>

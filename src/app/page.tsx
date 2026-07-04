@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import HomePageCarousel from '@/components/HomePageCarousel';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ export default async function HomePage() {
   } catch { carouselItems = []; }
   if (carouselItems.length === 0) {
     carouselItems = [
-      { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: '' },
+      { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: '/#reverse' },
       { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/tool/pilot-map' },
     ];
   }
@@ -57,28 +58,7 @@ export default async function HomePage() {
             <p className="hero-sub">—— 工业化肉制品研发与智能中试平台</p>
           </div>
           <div className="hero-grid">
-            <div className="carousel-slides" id="carousel">
-              {carouselItems.map((item, i) => (
-                <div key={i} className={`carousel-slide ${i === 0 ? 'active' : ''}`}>
-                  <div className={`carousel-bg ${item.bg}`}></div>
-                  <div className="slide-content">
-                    <span className="carousel-tag">{item.tag}</span>
-                    <h3 className="carousel-title">{item.title}</h3>
-                    <p className="carousel-desc">{item.desc}</p>
-                    {item.link ? (
-                      <Link href={item.link} className="carousel-btn">{item.btn} →</Link>
-                    ) : (
-                      <span className="carousel-btn">{item.btn} →</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div className="carousel-dots" id="dots">
-                {carouselItems.map((_, i) => (
-                  <span key={i} className={i === 0 ? 'active' : ''} data-index={i}></span>
-                ))}
-              </div>
-            </div>
+            <HomePageCarousel items={carouselItems} />
             <div className="tool-box" id="tools">
               <Link href="/tool/gb2760" className="tool-card">
                 <div className="tool-icon" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📊</div>
@@ -110,7 +90,7 @@ export default async function HomePage() {
           <p className="section-intro">追踪山姆、盒马等零售终端销量走势，逆向拆解工业化量产工艺</p>
           <div className="reverse-grid">
             {products.map((p, i) => (
-              <div key={p.id} className="reverse-card">
+              <Link key={p.id} href={`/product/${p.id}`} className="reverse-card">
                 <div className={`reverse-card-banner ${bannersMap[p.category] || banners[i % 3]}`}>
                   <span className="cat-tag">{p.category}</span>
                   {bannerIcons[p.category] || '🍖'}
@@ -123,7 +103,7 @@ export default async function HomePage() {
                   </div>
                   <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>查看逆向工艺报告 →</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -243,35 +223,27 @@ export default async function HomePage() {
                 </div>
               </Link>
             ))}
-            {industryItems.map((item, i) => (
-              <div key={i} className="industry-item">
-                <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: item.tagBg, color: item.tagColor }}>{item.icon}</div>
-                <div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: item.tagBg, color: item.tagColor }}>{item.tag}</span>{item.title}</h4>
-                  <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{item.desc}</p>
-                </div>
-              </div>
-            ))}
+            {industryItems.map((item, i) => {
+              const inner = (
+                <>
+                  <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: item.tagBg, color: item.tagColor }}>{item.icon}</div>
+                  <div>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: item.tagBg, color: item.tagColor }}>{item.tag}</span>{item.title}</h4>
+                    <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{item.desc}</p>
+                  </div>
+                </>
+              );
+              return item.link ? (
+                <Link key={i} href={item.link} className="industry-item">{inner}</Link>
+              ) : (
+                <div key={i} className="industry-item">{inner}</div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       <Footer />
-
-      <script dangerouslySetInnerHTML={{ __html: `
-        (function(){
-          var slides=document.querySelectorAll('.carousel-slide');
-          var dots=document.querySelectorAll('#dots span');
-          var current=0,timer=null;
-          function show(i){slides.forEach(function(s,j){s.classList.toggle('active',j===i)});dots.forEach(function(d,j){d.classList.toggle('active',j===i)});current=i}
-          function next(){show((current+1)%slides.length)}
-          function start(){timer=setInterval(next,5000)}
-          function stop(){clearInterval(timer)}
-          dots.forEach(function(dot){dot.addEventListener('click',function(){show(parseInt(this.dataset.index));stop();start()})});
-          var c=document.getElementById('carousel');if(c){c.addEventListener('mouseenter',stop);c.addEventListener('mouseleave',start)}
-          start();
-        })();
-      `}} />
     </>
   );
 }
