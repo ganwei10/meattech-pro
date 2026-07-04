@@ -407,18 +407,18 @@ export async function GET() {
     logs.push('Seeding homepage settings...');
     const homepageSettings = [
       { key: 'homepage_carousel', value: JSON.stringify([
-        { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: '/#reverse' },
-        { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/tool/pilot-map' },
+        { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: '/product/1' },
+        { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/booking' },
       ]) },
       { key: 'homepage_industry', value: JSON.stringify([
-        { icon: '🔬', tag: '辅料应用', tagBg: '#FEF3C7', tagColor: '#92400E', title: '复配磷酸盐在低温火腿中的保水优化方案', desc: '对比三聚磷酸钠、六偏磷酸钠及其复配方案在低温火腿中的保水效果，涵盖pH调节、蛋白质溶解度、质构分析等关键指标。', link: '' },
-        { icon: '⚙️', tag: '机械选型', tagBg: '#DBEAFE', tagColor: '#1E40AF', title: '汇川/西门子 PLC 控制系统在现代化高速斩拌机中的温度精准控制实践', desc: '对比汇川H3U系列与西门子S7-1200在高速斩拌机（6000rpm）刀盘温度闭环控制中的响应精度与稳定性表现，涵盖PID参数整定方法。', link: '' },
-        { icon: '📦', tag: '包装创新', tagBg: '#D1FAE5', tagColor: '#065F46', title: '莫迪维克（Multivac）高阻隔气调包装对低温冷鲜肉货架期延长突破', desc: '基于Multivac R245封口机平台，测试70%O₂+30%CO₂气调配比下，不同阻隔膜对低温冷鲜猪肉货架期的影响。7层共挤膜可将货架期从12天延长至21天。', link: '' },
+        { icon: '🔬', tag: '辅料应用', tagBg: '#FEF3C7', tagColor: '#92400E', title: '复配磷酸盐在低温火腿中的保水优化方案', desc: '对比三聚磷酸钠、六偏磷酸钠及其复配方案在低温火腿中的保水效果，涵盖pH调节、蛋白质溶解度、质构分析等关键指标。', link: '/search?q=复配磷酸盐' },
+        { icon: '⚙️', tag: '机械选型', tagBg: '#DBEAFE', tagColor: '#1E40AF', title: '汇川/西门子 PLC 控制系统在现代化高速斩拌机中的温度精准控制实践', desc: '对比汇川H3U系列与西门子S7-1200在高速斩拌机（6000rpm）刀盘温度闭环控制中的响应精度与稳定性表现，涵盖PID参数整定方法。', link: '/search?q=PLC斩拌机' },
+        { icon: '📦', tag: '包装创新', tagBg: '#D1FAE5', tagColor: '#065F46', title: '莫迪维克（Multivac）高阻隔气调包装对低温冷鲜肉货架期延长突破', desc: '基于Multivac R245封口机平台，测试70%O₂+30%CO₂气调配比下，不同阻隔膜对低温冷鲜猪肉货架期的影响。7层共挤膜可将货架期从12天延长至21天。', link: '/search?q=气调包装' },
       ]) },
     ];
     for (const s of homepageSettings) {
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "Setting" (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
+        `INSERT INTO "Setting" (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
         s.key, s.value
       );
     }

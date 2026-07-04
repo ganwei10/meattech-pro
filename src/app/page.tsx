@@ -7,8 +7,9 @@ import HomePageCarousel from '@/components/HomePageCarousel';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [featuredPosts, categories, products, pilotLines, carouselSetting, industrySetting] = await Promise.all([
+  const [featuredPosts, allPosts, categories, products, pilotLines, carouselSetting, industrySetting] = await Promise.all([
     prisma.post.findMany({ where: { status: 'PUBLISHED', featured: true }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 3 }),
+    prisma.post.findMany({ where: { status: 'PUBLISHED' }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 6 }),
     prisma.category.findMany({ orderBy: { order: 'asc' }, include: { _count: { select: { posts: true } } } }),
     prisma.product.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }] }),
     prisma.pilotLine.findMany({ orderBy: { createdAt: 'desc' } }),
@@ -23,14 +24,29 @@ export default async function HomePage() {
   } catch { carouselItems = []; }
   if (carouselItems.length === 0) {
     carouselItems = [
-      { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: '/#reverse' },
-      { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/tool/pilot-map' },
+      { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: products[0] ? `/product/${products[0].id}` : '/#reverse' },
+      { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/booking' },
     ];
   }
+  // Fix known bad carousel links from older seed data
+  carouselItems = carouselItems.map((item: any) => {
+    if (item.link === '/#reverse' && products[0]) {
+      return { ...item, link: `/product/${products[0].id}` };
+    }
+    if (item.link === '/tool/pilot-map') {
+      return { ...item, link: '/booking' };
+    }
+    return item;
+  });
   // Add featured post as carousel item if available
-  if (featuredPosts[0]) {
-    carouselItems.splice(1, 0, { tag: '技术前沿', title: featuredPosts[0].title.slice(0, 20) + '...', desc: featuredPosts[0].excerpt.slice(0, 60) + '...', bg: 'carousel-bg-2', btn: '阅读完整技术报告', link: `/article/${featuredPosts[0].slug}` });
+  const carouselPost = featuredPosts[0] || allPosts[0];
+  if (carouselPost) {
+    carouselItems.splice(1, 0, { tag: '技术前沿', title: carouselPost.title.slice(0, 20) + '...', desc: carouselPost.excerpt.slice(0, 60) + '...', bg: 'carousel-bg-2', btn: '阅读完整技术报告', link: `/article/${carouselPost.slug}` });
   }
+
+  // Split posts for different sections
+  const sciencePosts = allPosts.slice(0, 3);
+  const industryPosts = allPosts.slice(3, 6);
 
   // Parse industry settings, fallback to defaults
   let industryItems: any[] = [];
@@ -39,8 +55,8 @@ export default async function HomePage() {
   } catch { industryItems = []; }
   if (industryItems.length === 0) {
     industryItems = [
-      { icon: '⚙️', tag: '机械选型', tagBg: '#DBEAFE', tagColor: '#1E40AF', title: '汇川/西门子 PLC 控制系统在现代化高速斩拌机中的温度精准控制实践', desc: '对比汇川H3U系列与西门子S7-1200在高速斩拌机（6000rpm）刀盘温度闭环控制中的响应精度与稳定性表现，涵盖PID参数整定方法、斩拌过程中的冰屑添加策略。' },
-      { icon: '📦', tag: '包装创新', tagBg: '#D1FAE5', tagColor: '#065F46', title: '莫迪维克（Multivac）高阻隔气调包装对低温冷鲜肉货架期延长突破', desc: '基于Multivac R245封口机平台，测试70%O₂+30%CO₂气调配比下，不同阻隔膜对低温冷鲜猪肉货架期的影响。7层共挤膜可将货架期从12天延长至21天。' },
+      { icon: '⚙️', tag: '机械选型', tagBg: '#DBEAFE', tagColor: '#1E40AF', title: '汇川/西门子 PLC 控制系统在现代化高速斩拌机中的温度精准控制实践', desc: '对比汇川H3U系列与西门子S7-1200在高速斩拌机（6000rpm）刀盘温度闭环控制中的响应精度与稳定性表现，涵盖PID参数整定方法、斩拌过程中的冰屑添加策略。', link: '/search?q=PLC斩拌机' },
+      { icon: '📦', tag: '包装创新', tagBg: '#D1FAE5', tagColor: '#065F46', title: '莫迪维克（Multivac）高阻隔气调包装对低温冷鲜肉货架期延长突破', desc: '基于Multivac R245封口机平台，测试70%O₂+30%CO₂气调配比下，不同阻隔膜对低温冷鲜猪肉货架期的影响。7层共挤膜可将货架期从12天延长至21天。', link: '/search?q=气调包装' },
     ];
   }
 
@@ -129,7 +145,7 @@ export default async function HomePage() {
               ))}
             </div>
             <div className="science-articles">
-              {featuredPosts.map((post) => (
+              {sciencePosts.length > 0 ? sciencePosts.map((post) => (
                 <Link href={`/article/${post.slug}`} key={post.id} className="science-article-card">
                   <div className="article-header">
                     <span className={`tag ${post.tags.includes('故障') ? 'red' : ''}`}>{post.tags.split(',')[0] || '技术专题'}</span>
@@ -145,7 +161,12 @@ export default async function HomePage() {
                     </div>
                   </div>
                 </Link>
-              ))}
+              )) : (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p style={{ fontSize: '1rem', marginBottom: '12px' }}>暂无文章，请在后台 CMS 发布文章后显示</p>
+                  <Link href="/admin/posts/new" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600 }}>去发布文章 →</Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -214,15 +235,17 @@ export default async function HomePage() {
           </div>
           <p className="section-intro">拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {featuredPosts.filter(p => !p.tags.includes('故障')).slice(0, 1).map(post => (
-              <Link href={`/article/${post.slug}`} key={post.id} className="industry-item">
-                <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: '#FEF3C7', color: '#D97706' }}>🔬</div>
+            {/* CMS-managed articles */}
+            {industryPosts.map((post) => (
+              <Link href={`/article/${post.slug}`} key={`post-${post.id}`} className="industry-item">
+                <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: '#DBEAFE', color: '#1E40AF' }}>📄</div>
                 <div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: '#FEF3C7', color: '#92400E' }}>辅料应用</span>{post.title}</h4>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: '#DBEAFE', color: '#1E40AF' }}>{post.tags.split(',')[0] || post.category.name}</span>{post.title}</h4>
                   <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{post.excerpt}</p>
                 </div>
               </Link>
             ))}
+            {/* CMS-managed industry items from Setting */}
             {industryItems.map((item, i) => {
               const inner = (
                 <>
@@ -233,10 +256,9 @@ export default async function HomePage() {
                   </div>
                 </>
               );
-              return item.link ? (
-                <Link key={i} href={item.link} className="industry-item">{inner}</Link>
-              ) : (
-                <div key={i} className="industry-item">{inner}</div>
+              const href = item.link || `/search?q=${encodeURIComponent(item.title)}`;
+              return (
+                <Link key={`ind-${i}`} href={href} className="industry-item">{inner}</Link>
               );
             })}
           </div>
