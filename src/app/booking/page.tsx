@@ -14,7 +14,7 @@ export default async function BookingPage() {
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '48px 24px' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E3A8A', marginBottom: '8px' }}>中试产线预约</h1>
         <p style={{ color: '#6B7280', marginBottom: '32px' }}>提交您的中试需求，平台专家将在24小时内1对1跟进</p>
-        <BookingForm lines={lines.map(l => ({ id: l.id, name: l.name, region: l.region, status: l.status }))} />
+        <BookingForm lines={lines.map(l => ({ id: l.id, name: l.name, region: l.region, status: l.status, specs: l.specs, capacity: l.capacity }))} />
       </div>
       <Footer />
     </>

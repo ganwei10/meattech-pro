@@ -13,6 +13,8 @@ model User {
   password  String
   name      String
   role      String   @default("EDITOR")
+  phone     String?  
+  company   String?  
   createdAt DateTime @default(now())
 }
 
@@ -60,20 +62,49 @@ model PilotLine {
   region      String
   status      String   @default("AVAILABLE")
   specs       String   @default("")
+  capacity    String   @default("")
   createdAt   DateTime @default(now())
   bookings    Booking[]
 }
 
 model Booking {
-  id          Int      @id @default(autoincrement())
-  line        PilotLine @relation(fields: [lineId], references: [id])
-  lineId      Int
-  contactName String
-  contactPhone String
-  company     String
-  requirement String
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  line            PilotLine @relation(fields: [lineId], references: [id])
+  lineId          Int
+  contactName     String
+  contactPhone    String
+  contactEmail    String   @default("")
+  company         String
+  experimentType  String   @default("")
+  requirement     String
+  preferredDate   String   @default("")
+  status          String   @default("PENDING")
+  adminNote       String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Additive {
+  id            Int      @id @default(autoincrement())
+  name          String
+  alias         String   @default("")
+  casNumber     String?
+  functionClass String
+  maxLimit      String
+  foodCategory  String
+  remarks       String   @default("")
+  createdAt     DateTime @default(now())
+}
+
+model TroubleshootNode {
+  id        Int      @id @default(autoincrement())
+  category  String
+  question  String
+  options   String
+  isLeaf    Boolean  @default(false)
+  advice    String?
+  parentId  Int?
+  createdAt DateTime @default(now())
 }
 
 model Setting {

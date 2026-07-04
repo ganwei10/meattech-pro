@@ -3,11 +3,35 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function PostEditor({ categories }: { categories: { id: number; name: string }[] }) {
+type Post = {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  tags: string;
+  status: string;
+  categoryId: number;
+  featured: boolean;
+};
+
+export default function PostEditor({ categories, post }: {
+  categories: { id: number; name: string }[];
+  post?: Post;
+}) {
   const router = useRouter();
+  const isEdit = !!post;
   const [form, setForm] = useState({
-    title: '', slug: '', excerpt: '', content: '', author: 'MeatTech Pro 编辑部',
-    tags: '', categoryId: categories[0]?.id || 1, featured: false, status: 'PUBLISHED',
+    title: post?.title || '',
+    slug: post?.slug || '',
+    excerpt: post?.excerpt || '',
+    content: post?.content || '',
+    author: post?.author || 'MeatTech Pro 编辑部',
+    tags: post?.tags || '',
+    categoryId: post?.categoryId || categories[0]?.id || 1,
+    featured: post?.featured || false,
+    status: post?.status || 'PUBLISHED',
   });
   const [saving, setSaving] = useState(false);
 
@@ -15,8 +39,10 @@ export default function PostEditor({ categories }: { categories: { id: number; n
     e.preventDefault();
     setSaving(true);
     const slug = form.slug || form.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
-    await fetch('/api/posts', {
-      method: 'POST',
+    const url = isEdit ? `/api/posts/${post!.id}` : '/api/posts';
+    const method = isEdit ? 'PUT' : 'POST';
+    await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...form, slug }),
     });
@@ -28,7 +54,7 @@ export default function PostEditor({ categories }: { categories: { id: number; n
 
   return (
     <div>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 24 }}>发布新文章</h1>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 24 }}>{isEdit ? '编辑文章' : '发布新文章'}</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
         <div>
           <label style={{ display: 'block', fontSize: '.85rem', fontWeight: 600, marginBottom: 6 }}>标题 *</label>
@@ -68,6 +94,7 @@ export default function PostEditor({ categories }: { categories: { id: number; n
             <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={inputStyle}>
               <option value="PUBLISHED">已发布</option>
               <option value="DRAFT">草稿</option>
+              <option value="ARCHIVED">已归档</option>
             </select>
           </div>
         </div>
@@ -77,7 +104,7 @@ export default function PostEditor({ categories }: { categories: { id: number; n
           </label>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button type="submit" disabled={saving} style={{ background: '#1E3A8A', color: '#fff', border: 'none', padding: '12px 32px', borderRadius: 8, fontSize: '.95rem', fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? '保存中...' : '发布文章'}</button>
+          <button type="submit" disabled={saving} style={{ background: '#1E3A8A', color: '#fff', border: 'none', padding: '12px 32px', borderRadius: 8, fontSize: '.95rem', fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? '保存中...' : (isEdit ? '保存修改' : '发布文章')}</button>
           <button type="button" onClick={() => router.back()} style={{ background: '#F3F4F6', color: '#6B7280', border: 'none', padding: '12px 24px', borderRadius: 8, fontSize: '.95rem', cursor: 'pointer' }}>取消</button>
         </div>
       </form>

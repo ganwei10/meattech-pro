@@ -39,6 +39,7 @@ export default async function AdminPosts() {
                 <td style={{ padding: '12px 16px', fontSize: '.85rem', color: '#6B7280' }}>{post.views}</td>
                 <td style={{ padding: '12px 16px', fontSize: '.8rem', color: '#9CA3AF' }}>{new Date(post.createdAt).toISOString().slice(0, 10)}</td>
                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                  <Link href={`/admin/posts/${post.id}`} style={{ color: '#1E3A8A', fontSize: '.82rem', fontWeight: 600, marginRight: 12 }}>编辑</Link>
                   <DeleteButton id={post.id} />
                 </td>
               </tr>

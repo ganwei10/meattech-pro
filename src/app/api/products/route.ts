@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
-  const products = await prisma.product.findMany({
-    where: { status: 'PUBLISHED' },
-    orderBy: { createdAt: 'desc' },
-  });
-  return NextResponse.json(products);
+  try {
+    const products = await prisma.product.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json(products);
+  } catch (error) {
+    return NextResponse.json({ error: '获取产品失败', detail: String(error) }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {

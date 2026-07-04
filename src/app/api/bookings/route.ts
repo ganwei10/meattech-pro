@@ -2,11 +2,15 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-  const bookings = await prisma.booking.findMany({
-    include: { line: true },
-    orderBy: { createdAt: 'desc' },
-  });
-  return NextResponse.json(bookings);
+  try {
+    const bookings = await prisma.booking.findMany({
+      include: { line: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json(bookings);
+  } catch (error) {
+    return NextResponse.json({ error: '获取预约列表失败', detail: String(error) }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -21,8 +25,11 @@ export async function POST(request: Request) {
         lineId,
         contactName: body.contactName || '',
         contactPhone: body.contactPhone || '',
+        contactEmail: body.contactEmail || '',
         company: body.company || '',
+        experimentType: body.experimentType || '',
         requirement: body.requirement || '',
+        preferredDate: body.preferredDate || '',
       },
       include: { line: true },
     });
