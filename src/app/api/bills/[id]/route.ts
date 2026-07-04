@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLine } from '@/lib/safeQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,10 +9,18 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const bill = await prisma.bill.findUnique({
-      where: { id: parseInt(params.id) },
-      include: { line: true },
-    });
+    let bill: any;
+    try {
+      bill = await prisma.bill.findUnique({
+        where: { id: parseInt(params.id) },
+        include: { line: true },
+      });
+    } catch {
+      bill = await prisma.bill.findUnique({
+        where: { id: parseInt(params.id) },
+      });
+      if (bill) bill.line = await safeFindPilotLine(bill.lineId);
+    }
 
     if (!bill) {
       return NextResponse.json({ error: 'Bill not found' }, { status: 404 });

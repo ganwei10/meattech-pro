@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLine } from '@/lib/safeQuery';
 import { getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -12,16 +13,33 @@ export async function GET() {
   }
 
   try {
-    const bookings = await prisma.booking.findMany({
-      where: {
-        OR: [
-          { contactEmail: user.email },
-          ...(user.phone ? [{ contactPhone: user.phone }] : []),
-        ],
-      },
-      include: { line: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    let bookings: any[];
+    try {
+      bookings = await prisma.booking.findMany({
+        where: {
+          OR: [
+            { contactEmail: user.email },
+            ...(user.phone ? [{ contactPhone: user.phone }] : []),
+          ],
+        },
+        include: { line: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch {
+      // Fallback: query without include, fetch lines separately
+      bookings = await prisma.booking.findMany({
+        where: {
+          OR: [
+            { contactEmail: user.email },
+            ...(user.phone ? [{ contactPhone: user.phone }] : []),
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      for (const b of bookings) {
+        b.line = await safeFindPilotLine(b.lineId);
+      }
+    }
 
     return NextResponse.json({ bookings });
   } catch (error) {

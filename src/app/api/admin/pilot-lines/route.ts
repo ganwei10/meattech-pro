@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLines } from '@/lib/safeQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,21 +18,22 @@ export async function GET(request: Request) {
     const region = searchParams.get('region');
     const keyword = searchParams.get('keyword');
 
-    const where: any = {};
-    if (status) where.status = status;
-    if (region) where.region = region;
-    if (keyword) {
-      where.OR = [
-        { name: { contains: keyword } },
-        { description: { contains: keyword } },
-      ];
+    let lines = await safeFindPilotLines('desc');
+    // Filter in JS
+    if (status) lines = lines.filter((l: any) => l.status === status);
+    if (region) lines = lines.filter((l: any) => l.region === region);
+    if (keyword) lines = lines.filter((l: any) =>
+      (l.name || '').includes(keyword) || (l.description || '').includes(keyword)
+    );
+    // Add booking count
+    for (const line of lines) {
+      try {
+        const count = await prisma.booking.count({ where: { lineId: line.id } });
+        (line as any)._count = { bookings: count };
+      } catch {
+        (line as any)._count = { bookings: 0 };
+      }
     }
-
-    const lines = await prisma.pilotLine.findMany({
-      where,
-      orderBy: { id: 'desc' },
-      include: { _count: { select: { bookings: true } } },
-    });
 
     return NextResponse.json({ success: true, lines });
   } catch (error) {

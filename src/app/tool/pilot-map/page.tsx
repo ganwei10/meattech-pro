@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
+import { safeFindPilotLines } from '@/lib/safeQuery';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -12,7 +12,7 @@ const typeConfig: Record<string, { label: string; icon: string; color: string; b
 };
 
 export default async function PilotMapPage() {
-  const lines = await prisma.pilotLine.findMany({ orderBy: [{ createdAt: 'asc' }] });
+  const lines = await safeFindPilotLines('asc');
 
   const universities = lines.filter(l => l.type === 'UNIVERSITY' || (!l.type && l.name.includes('大学')));
   const parks = lines.filter(l => l.type === 'PARK');

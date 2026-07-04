@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { safeFindPilotLines } from '@/lib/safeQuery';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BookingForm from '@/components/BookingForm';
@@ -6,7 +6,7 @@ import BookingForm from '@/components/BookingForm';
 export const dynamic = 'force-dynamic';
 
 export default async function BookingPage() {
-  const lines = await prisma.pilotLine.findMany({ orderBy: { createdAt: 'desc' } });
+  const lines = await safeFindPilotLines('desc');
 
   return (
     <>

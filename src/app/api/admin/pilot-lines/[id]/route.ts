@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLine } from '@/lib/safeQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,13 +16,22 @@ export async function GET(
   }
 
   try {
-    const line = await prisma.pilotLine.findUnique({
-      where: { id: parseInt(params.id) },
-      include: { bookings: { orderBy: { createdAt: 'desc' }, take: 10 } },
-    });
+    const line = await safeFindPilotLine(parseInt(params.id));
 
     if (!line) {
       return NextResponse.json({ error: 'Pilot line not found' }, { status: 404 });
+    }
+
+    // Fetch recent bookings separately
+    try {
+      const bookings = await prisma.booking.findMany({
+        where: { lineId: parseInt(params.id) },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+      line.bookings = bookings;
+    } catch {
+      line.bookings = [];
     }
 
     return NextResponse.json({ success: true, line });

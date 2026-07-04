@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLines } from '@/lib/safeQuery';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -7,15 +8,16 @@ import HomePageCarousel from '@/components/HomePageCarousel';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [featuredPosts, allPosts, categories, products, pilotLines, carouselSetting, industrySetting] = await Promise.all([
+  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting] = await Promise.all([
     prisma.post.findMany({ where: { status: 'PUBLISHED', featured: true }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 3 }),
     prisma.post.findMany({ where: { status: 'PUBLISHED' }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 6 }),
     prisma.category.findMany({ orderBy: { order: 'asc' }, include: { _count: { select: { posts: true } } } }),
     prisma.product.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }] }),
-    prisma.pilotLine.findMany({ orderBy: { createdAt: 'desc' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_carousel' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_industry' } }),
   ]);
+  // Safe PilotLine query (may fallback to SELECT * if DB not migrated yet)
+  const pilotLines = await safeFindPilotLines('desc');
 
   // Parse carousel settings, fallback to defaults
   let carouselItems: any[] = [];

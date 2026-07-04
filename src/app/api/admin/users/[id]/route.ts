@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLine } from '@/lib/safeQuery';
 import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
@@ -31,21 +32,42 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 获取用户的预约和账单
-    const [bookings, bills] = await Promise.all([
-      prisma.booking.findMany({
-        where: { contactEmail: targetUser.email },
-        include: { line: true },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      }),
-      prisma.bill.findMany({
-        where: { customerEmail: targetUser.email },
-        include: { line: true },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      }),
-    ]);
+    // 获取用户的预约和账单 - safe queries
+    let bookings: any[];
+    let bills: any[];
+    try {
+      [bookings, bills] = await Promise.all([
+        prisma.booking.findMany({
+          where: { contactEmail: targetUser.email },
+          include: { line: true },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        }),
+        prisma.bill.findMany({
+          where: { customerEmail: targetUser.email },
+          include: { line: true },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        }),
+      ]);
+    } catch {
+      // Fallback: query without include
+      [bookings, bills] = await Promise.all([
+        prisma.booking.findMany({
+          where: { contactEmail: targetUser.email },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        }),
+        prisma.bill.findMany({
+          where: { customerEmail: targetUser.email },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        }),
+      ]);
+      for (const b of [...bookings, ...bills]) {
+        if (b.lineId) b.line = await safeFindPilotLine(b.lineId);
+      }
+    }
 
     return NextResponse.json({ user: targetUser, bookings, bills });
   } catch (error) {

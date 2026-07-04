@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { safeFindPilotLines } from '@/lib/safeQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,14 +9,11 @@ export async function GET(request: Request) {
     const region = searchParams.get('region');
     const status = searchParams.get('status');
 
-    const where: any = {};
-    if (region) where.region = region;
-    if (status) where.status = status;
+    let lines = await safeFindPilotLines('desc');
+    // Filter in JS since safeFindPilotLines doesn't support where clause
+    if (region) lines = lines.filter((l: any) => l.region === region);
+    if (status) lines = lines.filter((l: any) => l.status === status);
 
-    const lines = await prisma.pilotLine.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
     return NextResponse.json(lines);
   } catch (error) {
     return NextResponse.json({ error: '获取产线失败', detail: String(error) }, { status: 500 });

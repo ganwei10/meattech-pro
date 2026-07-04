@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { safeFindBookingWithLine, safeFindPilotLine } from '@/lib/safeQuery';
 import { sendBookingStatusNotification } from '@/lib/notify';
 
 export const dynamic = 'force-dynamic';
@@ -25,25 +26,23 @@ export async function PATCH(
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
     }
 
-    // 获取预约详情（用于发送通知）
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { line: true },
-    });
+    // 获取预约详情（用于发送通知）- safe query
+    const booking = await safeFindBookingWithLine(bookingId);
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    // 更新预约
+    // 更新预约（不使用 include）
     const updatedBooking = await prisma.booking.update({
       where: { id: bookingId },
       data: {
         status,
         adminNote: adminNote || undefined,
       },
-      include: { line: true },
     });
+    // Safely fetch line for the response
+    updatedBooking.line = await safeFindPilotLine(booking.lineId);
 
     // 如果预约确认为 CONFIRMED，自动创建账单
     if (status === 'CONFIRMED') {
@@ -55,8 +54,8 @@ export async function PATCH(
 
         if (!existingBill) {
           // 创建账单
-          const amount = booking.line.pricePerDay || 0;
-          const serviceFeePercent = booking.line.serviceFeePercent || 5;
+          const amount = booking.line?.pricePerDay || 0;
+          const serviceFeePercent = booking.line?.serviceFeePercent || 5;
           const serviceFee = amount * (serviceFeePercent / 100);
           const totalAmount = amount + serviceFee;
 

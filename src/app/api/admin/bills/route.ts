@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLine } from '@/lib/safeQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,11 +35,23 @@ export async function GET(request: Request) {
       where.createdAt = { ...where.createdAt, lte: new Date(endDate + 'T23:59:59') };
     }
 
-    const bills = await prisma.bill.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: { line: true, booking: true },
-    });
+    let bills: any[];
+    try {
+      bills = await prisma.bill.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: { line: true, booking: true },
+      });
+    } catch {
+      // Fallback: query without include, fetch lines separately
+      bills = await prisma.bill.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+      });
+      for (const b of bills) {
+        b.line = await safeFindPilotLine(b.lineId);
+      }
+    }
 
     return NextResponse.json({ success: true, bills });
   } catch (error) {
@@ -79,8 +92,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Bill already exists for this booking' }, { status: 400 });
     }
 
-    // 获取产线信息（用于计算服务费）
-    const line = await prisma.pilotLine.findUnique({ where: { id: lineId } });
+    // 获取产线信息（用于计算服务费）- safe query
+    const line = await safeFindPilotLine(lineId);
     if (!line) {
       return NextResponse.json({ error: 'Pilot line not found' }, { status: 404 });
     }

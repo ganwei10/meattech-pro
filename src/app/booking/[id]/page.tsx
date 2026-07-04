@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { safeFindBookingWithLine } from '@/lib/safeQuery';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -6,10 +6,7 @@ import Footer from '@/components/Footer';
 export const dynamic = 'force-dynamic';
 
 export default async function BookingDetailPage({ params }: { params: { id: string } }) {
-  const booking = await prisma.booking.findUnique({
-    where: { id: parseInt(params.id) },
-    include: { line: true },
-  });
+  const booking = await safeFindBookingWithLine(parseInt(params.id));
 
   if (!booking) {
     return (
@@ -55,8 +52,8 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
         <div style={{ background: '#fff', borderRadius: 16, padding: 32, boxShadow: '0 2px 12px rgba(0,0,0,0.04)', marginBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
             <div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{booking.line.name}</h2>
-              <p style={{ fontSize: '.85rem', color: '#6B7280', marginTop: 4 }}>{booking.line.region} | {booking.line.specs}</p>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{booking.line?.name || '产线信息不可用'}</h2>
+              <p style={{ fontSize: '.85rem', color: '#6B7280', marginTop: 4 }}>{booking.line?.region || ''} {booking.line?.specs ? `| ${booking.line.specs}` : ''}</p>
             </div>
             <span style={{ fontSize: '.82rem', padding: '6px 14px', borderRadius: 8, background: st.bg, color: st.color, fontWeight: 700 }}>{st.label}</span>
           </div>

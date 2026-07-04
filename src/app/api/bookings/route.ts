@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { safeFindBookingsWithLine, safeFindPilotLine } from '@/lib/safeQuery';
 import { notifyNewBooking } from '@/lib/notify';
 
 export async function GET() {
   try {
-    const bookings = await prisma.booking.findMany({
-      include: { line: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    const bookings = await safeFindBookingsWithLine();
     return NextResponse.json(bookings);
   } catch (error) {
     return NextResponse.json({ error: '获取预约列表失败', detail: String(error) }, { status: 500 });
@@ -32,18 +30,19 @@ export async function POST(request: Request) {
         requirement: body.requirement || '',
         preferredDate: body.preferredDate || '',
       },
-      include: { line: true },
     });
+    // Safely fetch the line for notification
+    const line = await safeFindPilotLine(lineId);
     // 异步发送通知（不阻塞预约创建响应）
     notifyNewBooking({
       id: booking.id,
       contactName: booking.contactName,
       company: booking.company,
-      line: booking.line,
+      line: line,
       requirement: booking.requirement,
     }).catch(err => console.error('通知发送失败:', err));
 
-    return NextResponse.json(booking, { status: 201 });
+    return NextResponse.json({ ...booking, line }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: '预约提交失败', detail: String(error) }, { status: 500 });
   }

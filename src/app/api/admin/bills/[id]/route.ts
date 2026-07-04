@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { safeFindPilotLine } from '@/lib/safeQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +16,25 @@ export async function GET(
   }
 
   try {
-    const bill = await prisma.bill.findUnique({
-      where: { id: parseInt(params.id) },
-      include: { line: true, booking: true },
-    });
+    let bill: any;
+    try {
+      bill = await prisma.bill.findUnique({
+        where: { id: parseInt(params.id) },
+        include: { line: true, booking: true },
+      });
+    } catch {
+      bill = await prisma.bill.findUnique({
+        where: { id: parseInt(params.id) },
+      });
+      if (bill) {
+        bill.line = await safeFindPilotLine(bill.lineId);
+        try {
+          bill.booking = await prisma.booking.findUnique({ where: { id: bill.bookingId } });
+        } catch {
+          bill.booking = null;
+        }
+      }
+    }
 
     if (!bill) {
       return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
@@ -68,7 +84,7 @@ export async function PUT(
     if (amount !== undefined) {
       updateData.amount = parseFloat(amount);
       // 重新计算服务费
-      const line = await prisma.pilotLine.findUnique({ where: { id: bill.lineId } });
+      const line = await safeFindPilotLine(bill.lineId);
       const feePercent = serviceFeePercent !== undefined ? parseFloat(serviceFeePercent) : (bill.serviceFee / bill.amount * 100);
       updateData.serviceFee = updateData.amount * (feePercent / 100);
       updateData.totalAmount = updateData.amount + updateData.serviceFee;
@@ -95,8 +111,8 @@ export async function PUT(
     const updatedBill = await prisma.bill.update({
       where: { id: parseInt(params.id) },
       data: updateData,
-      include: { line: true, booking: true },
     });
+    updatedBill.line = await safeFindPilotLine(updatedBill.lineId);
 
     return NextResponse.json({ success: true, bill: updatedBill });
   } catch (error) {
