@@ -3,11 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface Setting {
-  key: string;
-  value: string;
-}
-
 interface ArticleSource {
   name: string;
   url: string;
@@ -37,10 +32,27 @@ export default function SettingsPage() {
     { name: 'Meat Science', url: 'https://www.sciencedirect.com/journal/meat-science/rss', type: 'rss', category: '发酵与肉干制品' },
   ]);
   const [newSource, setNewSource] = useState<ArticleSource>({ name: '', url: '', type: 'rss', category: '中式酱卤肉制品' });
+
+  // 通知模板
+  const [emailTemplates, setEmailTemplates] = useState<Record<string, string>>({
+    confirmed: '',
+    cancelled: '',
+    in_progress: '',
+    completed: '',
+  });
+  const [smsTemplates, setSmsTemplates] = useState<Record<string, string>>({
+    confirmed: '',
+    cancelled: '',
+    in_progress: '',
+    completed: '',
+  });
+  const [activeTemplateType, setActiveTemplateType] = useState<'email' | 'sms'>('email');
+  const [activeStatus, setActiveStatus] = useState<string>('confirmed');
+
   const [saving, setSaving] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [message, setMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'notify' | 'sources' | 'fetch'>('notify');
+  const [activeTab, setActiveTab] = useState<'notify' | 'sources' | 'fetch' | 'templates'>('notify');
   const [testingEmail, setTestingEmail] = useState(false);
   const [testEmailAddress, setTestEmailAddress] = useState('');
 
@@ -71,6 +83,15 @@ export default function SettingsPage() {
       if (data.article_sources) {
         try { setSources(JSON.parse(data.article_sources)); } catch {}
       }
+      // 加载模板
+      if (data.email_template_confirmed) setEmailTemplates(prev => ({ ...prev, confirmed: data.email_template_confirmed }));
+      if (data.email_template_cancelled) setEmailTemplates(prev => ({ ...prev, cancelled: data.email_template_cancelled }));
+      if (data.email_template_in_progress) setEmailTemplates(prev => ({ ...prev, in_progress: data.email_template_in_progress }));
+      if (data.email_template_completed) setEmailTemplates(prev => ({ ...prev, completed: data.email_template_completed }));
+      if (data.sms_template_confirmed) setSmsTemplates(prev => ({ ...prev, confirmed: data.sms_template_confirmed }));
+      if (data.sms_template_cancelled) setSmsTemplates(prev => ({ ...prev, cancelled: data.sms_template_cancelled }));
+      if (data.sms_template_in_progress) setSmsTemplates(prev => ({ ...prev, in_progress: data.sms_template_in_progress }));
+      if (data.sms_template_completed) setSmsTemplates(prev => ({ ...prev, completed: data.sms_template_completed }));
     }
   };
 
@@ -87,6 +108,14 @@ export default function SettingsPage() {
       smtp_from: smtpFrom,
       sms_webhook: smsWebhook,
       article_sources: JSON.stringify(sources),
+      email_template_confirmed: emailTemplates.confirmed,
+      email_template_cancelled: emailTemplates.cancelled,
+      email_template_in_progress: emailTemplates.in_progress,
+      email_template_completed: emailTemplates.completed,
+      sms_template_confirmed: smsTemplates.confirmed,
+      sms_template_cancelled: smsTemplates.cancelled,
+      sms_template_in_progress: smsTemplates.in_progress,
+      sms_template_completed: smsTemplates.completed,
     };
 
     const res = await fetch('/api/admin/settings', {
@@ -144,8 +173,34 @@ export default function SettingsPage() {
     setSources(sources.filter((_, i) => i !== index));
   };
 
+  const getTemplatePlaceholder = (type: 'email' | 'sms', status: string) => {
+    if (type === 'email') {
+      return `可用的占位符：
+- {{contactName}} - 联系人姓名
+- {{bookingId}} - 预约编号
+- {{lineName}} - 产线名称
+- {{requirement}} - 实验需求
+- {{adminNote}} - 管理员备注（HTML格式）
+- {{adminNoteText}} - 管理员备注（纯文本）`;
+    } else {
+      return `可用的占位符：
+- {{contactName}} - 联系人姓名
+- {{bookingId}} - 预约编号
+- {{lineName}} - 产线名称
+- {{requirement}} - 实验需求
+- {{adminNoteText}} - 管理员备注`;
+    }
+  };
+
   if (checking) return <div style={{ padding: 32, color: '#9CA3AF' }}>检查权限...</div>;
   if (!isAdmin) return <div style={{ padding: 32 }}>无权限访问</div>;
+
+  const statusLabels: Record<string, string> = {
+    confirmed: '✅ 已确认',
+    cancelled: '❌ 已拒绝',
+    in_progress: '▶️ 执行中',
+    completed: '✅ 已完成',
+  };
 
   return (
     <div>
@@ -158,15 +213,15 @@ export default function SettingsPage() {
       )}
 
       {/* Tab 切换 */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: '1px solid #E5E7EB', paddingBottom: 12 }}>
-        {(['notify', 'sources', 'fetch'] as const).map(tab => (
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: '1px solid #E5E7EB', paddingBottom: 12, flexWrap: 'wrap' }}>
+        {(['notify', 'templates', 'sources', 'fetch'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: activeTab === tab ? '#1E3A8A' : '#F3F4F6', color: activeTab === tab ? '#fff' : '#374151', cursor: 'pointer', fontSize: '.9rem', fontWeight: activeTab === tab ? 700 : 400 }}>
-            {tab === 'notify' ? '📧 通知设置' : tab === 'sources' ? '📰 文章来源' : '🔄 手动爬取'}
+            {tab === 'notify' ? '📧 通知配置' : tab === 'templates' ? '📝 通知模板' : tab === 'sources' ? '📰 文章来源' : '🔄 手动爬取'}
           </button>
         ))}
       </div>
 
-      {/* 通知设置 */}
+      {/* 通知配置 */}
       {activeTab === 'notify' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ background: '#fff', padding: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
@@ -197,9 +252,6 @@ export default function SettingsPage() {
                 <input value={smtpFrom} onChange={e => setSmtpFrom(e.target.value)} placeholder="noreply@meattech.pro" style={{ width: '100%', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: 8, boxSizing: 'border-box' }} />
               </div>
             </div>
-            <div style={{ marginTop: 16, fontSize: '.82rem', color: '#9CA3AF' }}>
-              💡 如不配置 SMTP，系统将使用 Resend API（需设置 RESEND_API_KEY 环境变量）或控制台输出模式
-            </div>
             <div style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
               <input value={testEmailAddress} onChange={e => setTestEmailAddress(e.target.value)} placeholder="测试邮箱地址（留空则使用通知邮箱）" style={{ flex: 1, padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: 8, boxSizing: 'border-box' }} />
               <button onClick={handleTestEmail} disabled={testingEmail} style={{ background: '#059669', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontSize: '.9rem', fontWeight: 600, cursor: testingEmail ? 'not-allowed' : 'pointer', opacity: testingEmail ? 0.7 : 1 }}>
@@ -220,13 +272,70 @@ export default function SettingsPage() {
                 <input value={smsWebhook} onChange={e => setSmsWebhook(e.target.value)} placeholder="https://your-sms-service.com/send" style={{ width: '100%', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: 8, boxSizing: 'border-box' }} />
               </div>
             </div>
-            <div style={{ marginTop: 16, fontSize: '.82rem', color: '#9CA3AF' }}>
-              💡 配置 Webhook 后，新预约将自动发送短信。如未配置，短信将通过控制台输出（开发模式）
-            </div>
           </div>
 
           <button onClick={handleSave} disabled={saving} style={{ alignSelf: 'flex-start', background: '#1E3A8A', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 10, fontSize: '.95rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
             {saving ? '保存中...' : '保存设置'}
+          </button>
+        </div>
+      )}
+
+      {/* 通知模板 */}
+      {activeTab === 'templates' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ background: '#fff', padding: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>通知模板</h2>
+            <p style={{ color: '#6B7280', fontSize: '.9rem', marginBottom: 16 }}>
+              自定义不同状态下的通知内容。模板支持占位符，会在发送时自动替换为实际内容。
+            </p>
+
+            {/* 邮件/短信切换 */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <button onClick={() => setActiveTemplateType('email')} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: activeTemplateType === 'email' ? '#1E3A8A' : '#F3F4F6', color: activeTemplateType === 'email' ? '#fff' : '#374151', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600 }}>
+                📧 邮件模板
+              </button>
+              <button onClick={() => setActiveTemplateType('sms')} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: activeTemplateType === 'sms' ? '#1E3A8A' : '#F3F4F6', color: activeTemplateType === 'sms' ? '#fff' : '#374151', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600 }}>
+                📱 短信模板
+              </button>
+            </div>
+
+            {/* 状态切换 */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              {Object.entries(statusLabels).map(([status, label]) => (
+                <button key={status} onClick={() => setActiveStatus(status)} style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: activeStatus === status ? '#059669' : '#F3F4F6', color: activeStatus === status ? '#fff' : '#374151', cursor: 'pointer', fontSize: '.85rem' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* 模板编辑器 */}
+            <div>
+              <label style={{ display: 'block', fontSize: '.85rem', fontWeight: 600, marginBottom: 6 }}>
+                {activeTemplateType === 'email' ? '邮件模板' : '短信模板'} - {statusLabels[activeStatus]}
+              </label>
+              {activeTemplateType === 'email' ? (
+                <textarea
+                  value={emailTemplates[activeStatus]}
+                  onChange={e => setEmailTemplates({ ...emailTemplates, [activeStatus]: e.target.value })}
+                  style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #D1D5DB', fontSize: '.9rem', minHeight: 300, resize: 'vertical', fontFamily: 'monospace' }}
+                  placeholder={getTemplatePlaceholder('email', activeStatus)}
+                />
+              ) : (
+                <textarea
+                  value={smsTemplates[activeStatus]}
+                  onChange={e => setSmsTemplates({ ...smsTemplates, [activeStatus]: e.target.value })}
+                  style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #D1D5DB', fontSize: '.9rem', minHeight: 120, resize: 'vertical', fontFamily: 'monospace' }}
+                  placeholder={getTemplatePlaceholder('sms', activeStatus)}
+                />
+              )}
+              <div style={{ marginTop: 8, fontSize: '.82rem', color: '#9CA3AF', whiteSpace: 'pre-line' }}>
+                {getTemplatePlaceholder(activeTemplateType, activeStatus)}
+              </div>
+            </div>
+          </div>
+
+          <button onClick={handleSave} disabled={saving} style={{ alignSelf: 'flex-start', background: '#1E3A8A', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 10, fontSize: '.95rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+            {saving ? '保存中...' : '保存模板'}
           </button>
         </div>
       )}
@@ -297,9 +406,6 @@ export default function SettingsPage() {
           <button onClick={handleFetchArticles} disabled={fetching} style={{ background: '#1E3A8A', color: '#fff', border: 'none', padding: '14px 32px', borderRadius: 10, fontSize: '1rem', fontWeight: 700, cursor: fetching ? 'not-allowed' : 'pointer', opacity: fetching ? 0.7 : 1 }}>
             {fetching ? '爬取中...' : '开始爬取文章'}
           </button>
-          <p style={{ marginTop: 16, fontSize: '.82rem', color: '#9CA3AF' }}>
-            💡 生产环境将每天自动执行（由 Vercel Cron 触发）
-          </p>
         </div>
       )}
     </div>
