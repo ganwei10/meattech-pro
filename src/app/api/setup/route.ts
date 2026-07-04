@@ -360,6 +360,34 @@ export async function GET() {
       logs.push('Booking.billId already exists or skip');
     }
 
+    // 15. Create Media table
+    logs.push('Creating Media table...');
+    try {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "Media" (
+          id SERIAL PRIMARY KEY,
+          filename TEXT NOT NULL,
+          "originalName" TEXT NOT NULL,
+          url TEXT NOT NULL,
+          "thumbnailUrl" TEXT,
+          "mimeType" TEXT NOT NULL,
+          size INTEGER NOT NULL,
+          width INTEGER,
+          height INTEGER,
+          duration INTEGER,
+          type TEXT NOT NULL DEFAULT 'IMAGE',
+          folder TEXT NOT NULL DEFAULT 'default',
+          alt TEXT NOT NULL DEFAULT '',
+          caption TEXT NOT NULL DEFAULT '',
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3)
+        )
+      `);
+      logs.push('Media table OK');
+    } catch (e: any) {
+      logs.push('Media table already exists or skip');
+    }
+
     logs.push('=== Setup completed successfully ===');
     return NextResponse.json({ success: true, logs });
   } catch (error) {

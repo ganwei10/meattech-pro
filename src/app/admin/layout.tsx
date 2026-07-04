@@ -190,6 +190,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   background: isActive('/admin/posts') ? 'rgba(255,255,255,0.12)' : 'transparent',
                   textDecoration: 'none', display: 'block'
                 }}>📝 文章管理</Link>
+                <Link href="/admin/media" onClick={() => setPathname('/admin/media')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/media') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📁 媒体库</Link>
                 <Link href="/admin/categories" onClick={() => setPathname('/admin/categories')} style={{
                   padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
                   background: isActive('/admin/categories') ? 'rgba(255,255,255,0.12)' : 'transparent',

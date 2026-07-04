@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import MediaPicker from '@/components/MediaPicker';
 
 interface PilotLine {
   id: number;
@@ -46,6 +47,7 @@ export default function PilotLinesAdminPage() {
   });
   const [filter, setFilter] = useState({ status: '', region: '', keyword: '' });
   const [message, setMessage] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   const loadLines = useCallback(async () => {
     setLoading(true);
@@ -125,6 +127,21 @@ export default function PilotLinesAdminPage() {
     } else {
       setMessage(`❌ ${data.error || '删除失败'}`);
     }
+  };
+
+  const handleAddImage = (url: string) => {
+    const currentImages = form.images ? form.images.split(',').filter(Boolean) : [];
+    if (!currentImages.includes(url)) {
+      currentImages.push(url);
+      setForm({ ...form, images: currentImages.join(',') });
+    }
+    setShowImagePicker(false);
+  };
+
+  const handleRemoveImage = (url: string) => {
+    const currentImages = form.images ? form.images.split(',').filter(Boolean) : [];
+    const newImages = currentImages.filter(img => img !== url);
+    setForm({ ...form, images: newImages.join(',') });
   };
 
   const resetForm = () => {
@@ -289,6 +306,34 @@ export default function PilotLinesAdminPage() {
                 <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #D1D5DB', boxSizing: 'border-box' }} />
               </div>
 
+              {/* 产线图片管理 */}
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: '.9rem', fontWeight: 500 }}>产线图片</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                  {(form.images ? form.images.split(',').filter(Boolean) : []).map((url: string, i: number) => (
+                    <div key={i} style={{ position: 'relative', width: 80, height: 60 }}>
+                      <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6, border: '1px solid #E5E7EB' }} />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(url)}
+                        style={{ position: 'absolute', top: -6, right: -6, background: '#DC2626', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: '.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >×</button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowImagePicker(true)}
+                    style={{ width: 80, height: 60, border: '2px dashed #D1D5DB', borderRadius: 6, background: '#F9FAFB', cursor: 'pointer', fontSize: '.7rem', color: '#9CA3AF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >＋ 添加</button>
+                </div>
+                <input
+                  value={form.images}
+                  onChange={e => setForm({ ...form, images: e.target.value })}
+                  style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #D1D5DB', boxSizing: 'border-box', fontSize: '.82rem' }}
+                  placeholder="图片URL，多个用逗号分隔"
+                />
+              </div>
+
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
                 <button type="submit" style={{ flex: 1, padding: '10px 0', background: '#1E3A8A', color: '#FFF', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>{editingLine ? '更新' : '创建'}</button>
                 <button type="button" onClick={() => { setShowModal(false); setEditingLine(null); }} style={{ flex: 1, padding: '10px 0', background: '#E5E7EB', color: '#374151', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>取消</button>
@@ -296,6 +341,14 @@ export default function PilotLinesAdminPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* 图片选择器 */}
+      {showImagePicker && (
+        <MediaPicker
+          onSelect={handleAddImage}
+          onClose={() => setShowImagePicker(false)}
+        />
       )}
     </div>
   );
