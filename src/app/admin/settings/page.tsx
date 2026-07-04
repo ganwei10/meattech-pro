@@ -41,6 +41,8 @@ export default function SettingsPage() {
   const [fetching, setFetching] = useState(false);
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState<'notify' | 'sources' | 'fetch'>('notify');
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -104,16 +106,31 @@ export default function SettingsPage() {
   const handleFetchArticles = async () => {
     setFetching(true);
     setMessage('');
-    const res = await fetch('/api/cron/fetch-articles', {
-      headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'meattech-cron-secret'}` },
-    });
+    const res = await fetch('/api/admin/fetch-articles');
     const data = await res.json();
     if (data.success) {
       setMessage(`✅ ${data.message}`);
     } else {
-      setMessage(`❌ 爬取失败: ${data.error}`);
+      setMessage(`❌ 爬取失败: ${data.error || '未知错误'}`);
     }
     setFetching(false);
+  };
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    setMessage('');
+    const res = await fetch('/api/admin/test-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: testEmailAddress || email }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setMessage(`✅ 测试邮件已发送到 ${testEmailAddress || email}`);
+    } else {
+      setMessage(`❌ 邮件发送失败: ${data.error || '未知错误'}`);
+    }
+    setTestingEmail(false);
   };
 
   const addSource = () => {
@@ -182,6 +199,12 @@ export default function SettingsPage() {
             </div>
             <div style={{ marginTop: 16, fontSize: '.82rem', color: '#9CA3AF' }}>
               💡 如不配置 SMTP，系统将使用 Resend API（需设置 RESEND_API_KEY 环境变量）或控制台输出模式
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+              <input value={testEmailAddress} onChange={e => setTestEmailAddress(e.target.value)} placeholder="测试邮箱地址（留空则使用通知邮箱）" style={{ flex: 1, padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: 8, boxSizing: 'border-box' }} />
+              <button onClick={handleTestEmail} disabled={testingEmail} style={{ background: '#059669', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontSize: '.9rem', fontWeight: 600, cursor: testingEmail ? 'not-allowed' : 'pointer', opacity: testingEmail ? 0.7 : 1 }}>
+                {testingEmail ? '发送中...' : '📧 测试邮件'}
+              </button>
             </div>
           </div>
 
