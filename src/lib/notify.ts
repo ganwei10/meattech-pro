@@ -1,6 +1,79 @@
 import nodemailer from 'nodemailer';
 import { prisma } from './prisma';
 
+// 渲染通知模板（替换占位符）
+function renderTemplate(template: string, data: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(data)) {
+    result = result.replace(new RegExp(`{{${key}}}`, 'g'), value || '');
+  }
+  return result;
+}
+
+// 发送预约状态变更通知（使用模板）
+export async function sendBookingStatusNotification(
+  booking: {
+    id: number;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    line: { name: string };
+    requirement: string;
+  },
+  status: string,
+  adminNote?: string
+): Promise<void> {
+  const statusMessages: Record<string, string> = {
+    CONFIRMED: '已确认',
+    CANCELLED: '已拒绝',
+    IN_PROGRESS: '执行中',
+    COMPLETED: '已完成',
+  };
+
+  if (!statusMessages[status]) return;
+
+  // 获取通知模板
+  const templates = await prisma.setting.findMany({
+    where: { key: { in: [`email_template_${status.toLowerCase()}`, `sms_template_${status.toLowerCase()}`] } },
+  });
+  
+  const emailTemplate = templates.find(t => t.key === `email_template_${status.toLowerCase()}`)?.value || '';
+  const smsTemplate = templates.find(t => t.key === `sms_template_${status.toLowerCase()}`)?.value || '';
+
+  // 准备模板数据
+  const templateData: Record<string, string> = {
+    contactName: booking.contactName,
+    bookingId: String(booking.id),
+    lineName: booking.line.name,
+    requirement: booking.requirement,
+    adminNote: adminNote ? `<tr><td style="padding:8px 0;color:#6B7280;">管理员备注</td><td style="padding:8px 0;">${adminNote}</td></tr>` : '',
+    adminNoteText: adminNote || '',
+  };
+
+  // 渲染邮件模板并发送
+  const subject = `【MeatTech Pro】预约 #${booking.id} ${statusMessages[status]}`;
+  const emailContent = emailTemplate ? renderTemplate(emailTemplate, templateData) : '';
+
+  if (emailContent) {
+    // 发送给预约人（如果有邮箱）
+    if (booking.contactEmail) {
+      await sendEmailNotification(subject, emailContent, booking.contactEmail);
+    }
+    // 同时发送给管理员通知邮箱
+    await sendEmailNotification(subject, emailContent);
+  }
+
+  // 渲染并发送短信通知
+  const smsContent = smsTemplate ? renderTemplate(smsTemplate, templateData) : `【MeatTech Pro】您的预约 #${booking.id} 已${statusMessages[status]}。${adminNote ? `备注：${adminNote}` : ''}如有疑问请联系 400-xxx-xxxx`;
+  
+  if (booking.contactPhone) {
+    await sendSMSNotification(smsContent, booking.contactPhone);
+  }
+  
+  // 同时发送给管理员通知手机
+  await sendSMSNotification(smsContent);
+}
+
 // 发送邮件通知（支持指定收件人）
 export async function sendEmailNotification(subject: string, html: string, to?: string): Promise<boolean> {
   try {
@@ -61,8 +134,8 @@ export async function sendEmailNotification(subject: string, html: string, to?: 
   }
 }
 
-// 发送短信通知（通过 Webhook 转发到短信服务）
-export async function sendSMSNotification(message: string): Promise<boolean> {
+// 发送短信通知（支持指定收件人）
+export async function sendSMSNotification(message: string, to?: string): Promise<boolean> {
   try {
     const settings = await prisma.setting.findMany({
       where: { key: { in: ['notify_phone', 'sms_webhook'] } },
@@ -70,7 +143,7 @@ export async function sendSMSNotification(message: string): Promise<boolean> {
     const config: Record<string, string> = {};
     settings.forEach(s => { config[s.key] = s.value; });
 
-    const phone = config['notify_phone'];
+    const phone = to || config['notify_phone'];
     const webhook = config['sms_webhook'];
     if (!phone) return false;
 

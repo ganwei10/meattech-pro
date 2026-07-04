@@ -119,6 +119,60 @@ export async function GET() {
         { name: '中国肉类协会', url: 'http://www.chinameat.com.cn/', type: 'html', category: '中式酱卤肉制品' },
         { name: '肉制品技术网', url: 'http://www.rouzhipin.com/', type: 'html', category: '速冻调制肉制品（预制菜）' },
       ]) },
+      // 邮件通知模板
+      { key: 'email_template_confirmed', value: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
+  <h2 style="color:#059669;margin:0 0 16px;">✅ 预约已确认</h2>
+  <p style="font-size:1.1rem;margin-bottom:16px;">尊敬的 {{contactName}}，您的预约已<strong>确认</strong></p>
+  <table style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:8px 0;color:#6B7280;width:100px;">预约编号</td><td style="padding:8px 0;font-weight:600;">#{{bookingId}}</td></tr>
+    <tr><td style="padding:8px 0;color:#6B7280;">预约产线</td><td style="padding:8px 0;">{{lineName}}</td></tr>
+    <tr><td style="padding:8px 0;color:#6B7280;">实验需求</td><td style="padding:8px 0;">{{requirement}}</td></tr>
+    {{adminNote}}
+  </table>
+  <div style="margin-top:20px;padding:16px;background:#F9FAFB;border-radius:8px;">
+    <div style="font-size:.85rem;color:#6B7280;margin-bottom:8px;">如有疑问，请联系：</div>
+    <div style="font-size:.9rem;">📞 电话：400-xxx-xxxx</div>
+    <div style="font-size:.9rem;">📧 邮箱：admin@meattech.pro</div>
+  </div>
+</div>` },
+      { key: 'email_template_cancelled', value: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
+  <h2 style="color:#DC2626;margin:0 0 16px;">❌ 预约已取消</h2>
+  <p style="font-size:1.1rem;margin-bottom:16px;">尊敬的 {{contactName}}，抱歉您的预约已<strong>取消</strong></p>
+  <table style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:8px 0;color:#6B7280;width:100px;">预约编号</td><td style="padding:8px 0;font-weight:600;">#{{bookingId}}</td></tr>
+    <tr><td style="padding:8px 0;color:#6B7280;">预约产线</td><td style="padding:8px 0;">{{lineName}}</td></tr>
+    {{adminNote}}
+  </table>
+  <div style="margin-top:20px;padding:16px;background:#F9FAFB;border-radius:8px;">
+    <div style="font-size:.85rem;color:#6B7280;margin-bottom:8px;">如有疑问，请联系：</div>
+    <div style="font-size:.9rem;">📞 电话：400-xxx-xxxx</div>
+    <div style="font-size:.9rem;">📧 邮箱：admin@meattech.pro</div>
+  </div>
+</div>` },
+      { key: 'email_template_in_progress', value: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
+  <h2 style="color:#1E3A8A;margin:0 0 16px;">▶️ 实验执行中</h2>
+  <p style="font-size:1.1rem;margin-bottom:16px;">尊敬的 {{contactName}}，您的预约实验已<strong>开始执行</strong></p>
+  <table style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:8px 0;color:#6B7280;width:100px;">预约编号</td><td style="padding:8px 0;font-weight:600;">#{{bookingId}}</td></tr>
+    <tr><td style="padding:8px 0;color:#6B7280;">预约产线</td><td style="padding:8px 0;">{{lineName}}</td></tr>
+  </table>
+  <p style="margin-top:16px;color:#6B7280;">我们会在实验完成后第一时间通知您。</p>
+</div>` },
+      { key: 'email_template_completed', value: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
+  <h2 style="color:#059669;margin:0 0 16px;">✅ 实验已完成</h2>
+  <p style="font-size:1.1rem;margin-bottom:16px;">尊敬的 {{contactName}}，您的预约实验已<strong>完成</strong></p>
+  <table style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:8px 0;color:#6B7280;width:100px;">预约编号</td><td style="padding:8px 0;font-weight:600;">#{{bookingId}}</td></tr>
+    <tr><td style="padding:8px 0;color:#6B7280;">预约产线</td><td style="padding:8px 0;">{{lineName}}</td></tr>
+    {{adminNote}}
+  </table>
+  <p style="margin-top:16px;">感谢您使用 MeatTech Pro 智能中试平台！</p>
+</div>` },
+      // 短信通知模板
+      { key: 'sms_template_confirmed', value: '【MeatTech Pro】尊敬的{{contactName}}，您的预约 #{{bookingId}} 已确认。预约产线：{{lineName}}。如有疑问请联系 400-xxx-xxxx' },
+      { key: 'sms_template_cancelled', value: '【MeatTech Pro】尊敬的{{contactName}}，抱歉您的预约 #{{bookingId}} 已取消。{{adminNote}}如有疑问请联系 400-xxx-xxxx' },
+      { key: 'sms_template_in_progress', value: '【MeatTech Pro】尊敬的{{contactName}}，您的预约 #{{bookingId}} 实验已开始执行，我们会及时通知您进度。' },
+      { key: 'sms_template_completed', value: '【MeatTech Pro】尊敬的{{contactName}}，您的预约 #{{bookingId}} 实验已完成。{{adminNote}}感谢使用！' },
     ];
     for (const s of defaultSettings) {
       await prisma.$executeRawUnsafe(
