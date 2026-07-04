@@ -1,14 +1,65 @@
-import { prisma } from '@/lib/prisma';
+'use client';
+
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import BookingActions from '@/components/BookingActions';
 
-export const dynamic = 'force-dynamic';
+interface Booking {
+  id: number;
+  contactName: string;
+  contactPhone: string;
+  experimentType: string | null;
+  preferredDate: string | null;
+  status: string;
+  line: {
+    name: string;
+    region: string;
+  };
+}
 
-export default async function AdminBookings() {
-  const bookings = await prisma.booking.findMany({
-    include: { line: true },
-    orderBy: { createdAt: 'desc' },
-  });
+export default function AdminBookings() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/bookings')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then(data => {
+        setBookings(data.bookings);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(String(err));
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div style={{ padding: 32, color: '#9CA3AF' }}>加载中...</div>;
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ background: '#FEE2E2', border: '1px solid #EF4444', borderRadius: 12, padding: 24 }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#991B1B', marginBottom: 8 }}>
+            ⚠️ 加载失败
+          </h2>
+          <p style={{ color: '#991B1B', fontSize: '.9rem' }}>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: 16, background: '#1E3A8A', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontSize: '.9rem', cursor: 'pointer' }}
+          >
+            重试
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const statusMap: Record<string, { label: string; color: string; bg: string }> = {
     PENDING: { label: '待处理', color: '#92400E', bg: '#FEF3C7' },
