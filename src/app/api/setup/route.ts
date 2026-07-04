@@ -293,6 +293,68 @@ export async function GET() {
     }
     logs.push('Pilot lines capacity OK');
 
+    // 12. Add new columns to PilotLine (equipment, capabilities, contact info, pricing)
+    logs.push('Adding new columns to PilotLine...');
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "equipment" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "capabilities" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "contactPerson" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "contactPhone" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "contactEmail" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "pricePerDay" DOUBLE PRECISION NOT NULL DEFAULT 0`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "serviceFeePercent" DOUBLE PRECISION NOT NULL DEFAULT 5`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "description" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "images" TEXT NOT NULL DEFAULT ''`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PilotLine" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3)`);
+      // Update updatedAt for existing records
+      await prisma.$executeRawUnsafe(`UPDATE "PilotLine" SET "updatedAt" = "createdAt" WHERE "updatedAt" IS NULL`);
+      logs.push('PilotLine new columns OK');
+    } catch (e) {
+      logs.push('PilotLine new columns already exist or skip');
+    }
+
+    // 13. Create Bill table
+    logs.push('Creating Bill table...');
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Bill" (
+        id SERIAL PRIMARY KEY,
+        "bookingId" INTEGER NOT NULL UNIQUE,
+        "lineId" INTEGER NOT NULL,
+        "customerName" TEXT NOT NULL,
+        "customerPhone" TEXT NOT NULL,
+        "customerEmail" TEXT NOT NULL,
+        "company" TEXT NOT NULL,
+        "amount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "serviceFee" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "totalAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "status" TEXT NOT NULL DEFAULT 'PENDING',
+        "invoiceRequested" BOOLEAN NOT NULL DEFAULT false,
+        "invoiceInfo" TEXT NOT NULL DEFAULT '',
+        "paidAt" TIMESTAMP(3),
+        "note" TEXT NOT NULL DEFAULT '',
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3)
+      )
+    `);
+    // Add foreign key constraints
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Bill" ADD CONSTRAINT "Bill_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"(id) ON DELETE RESTRICT ON UPDATE CASCADE`);
+    } catch (e) {}
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Bill" ADD CONSTRAINT "Bill_lineId_fkey" FOREIGN KEY ("lineId") REFERENCES "PilotLine"(id) ON DELETE RESTRICT ON UPDATE CASCADE`);
+    } catch (e) {}
+    logs.push('Bill table OK');
+
+    // 14. Add Bill relation to Booking
+    logs.push('Adding Bill relation to Booking...');
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "billId" INTEGER`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Booking" ADD CONSTRAINT "Booking_billId_fkey" FOREIGN KEY ("billId") REFERENCES "Bill"(id) ON DELETE SET NULL ON UPDATE CASCADE`);
+      logs.push('Booking.billId OK');
+    } catch (e) {
+      logs.push('Booking.billId already exists or skip');
+    }
+
     logs.push('=== Setup completed successfully ===');
     return NextResponse.json({ success: true, logs });
   } catch (error) {

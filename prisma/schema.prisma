@@ -60,14 +60,26 @@ model Product {
 }
 
 model PilotLine {
-  id          Int      @id @default(autoincrement())
-  name        String
-  region      String
-  status      String   @default("AVAILABLE")
-  specs       String   @default("")
-  capacity    String   @default("")
-  createdAt   DateTime @default(now())
-  bookings    Booking[]
+  id                Int      @id @default(autoincrement())
+  name              String
+  region            String
+  status            String   @default("AVAILABLE")
+  specs             String   @default("")
+  capacity          String   @default("")
+  // 新增字段
+  equipment         String   @default("") // 设备信息（JSON字符串或逗号分隔）
+  capabilities      String   @default("") // 技术能力（JSON字符串或逗号分隔）
+  contactPerson     String   @default("") // 联系人姓名
+  contactPhone      String   @default("") // 联系人电话
+  contactEmail      String   @default("") // 联系人邮箱
+  pricePerDay       Float    @default(0)  // 每日收费标准（元）
+  serviceFeePercent Float    @default(5)   // 服务费百分比（%）
+  description       String   @default("") // 产线详细描述
+  images            String   @default("") // 产线图片（逗号分隔的URL）
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  bookings          Booking[]
+  bills             Bill[]
 }
 
 model Booking {
@@ -85,6 +97,30 @@ model Booking {
   adminNote       String   @default("")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  // 新增关联
+  bill            Bill?    // 关联的账单
+}
+
+model Bill {
+  id                Int       @id @default(autoincrement())
+  bookingId         Int       @unique
+  booking           Booking   @relation(fields: [bookingId], references: [id])
+  lineId            Int
+  line              PilotLine @relation(fields: [lineId], references: [id])
+  customerName      String    // 客户姓名
+  customerPhone     String    // 客户电话
+  customerEmail     String    // 客户邮箱
+  company           String    // 客户公司
+  amount            Float     // 预约金额（产线收费）
+  serviceFee        Float     // 服务费（金额 * 服务费百分比）
+  totalAmount       Float     // 总金额（金额 + 服务费）
+  status            String    @default("PENDING") // PENDING, PAID, CANCELLED
+  invoiceRequested  Boolean   @default(false) // 是否申请发票
+  invoiceInfo       String    @default("") // 发票信息（JSON）
+  paidAt            DateTime? // 支付时间
+  note              String    @default("") // 备注
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 model Additive {
