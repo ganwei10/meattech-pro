@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
+  // Admin user
   await prisma.user.upsert({
     where: { email: 'admin@meattech.pro' },
     update: {},
@@ -14,6 +15,7 @@ async function main() {
     },
   });
 
+  // Categories
   const categories = [
     { name: '中式酱卤肉制品', slug: 'chinese-braised', icon: 'folder', order: 1 },
     { name: '西式低温熏煮肉制品', slug: 'western-smoked', icon: 'folder', order: 2 },
@@ -31,6 +33,7 @@ async function main() {
   const cat1 = await prisma.category.findUnique({ where: { slug: 'chinese-braised' } });
   const cat2 = await prisma.category.findUnique({ where: { slug: 'western-smoked' } });
 
+  // Posts
   await prisma.post.upsert({
     where: { slug: 'clean-label-sausage' },
     update: {},
@@ -79,27 +82,33 @@ async function main() {
     },
   });
 
-  const existingProducts = await prisma.product.count();
-  if (existingProducts === 0) {
-    await prisma.product.createMany({
-      data: [
-        { title: '盒马黑椒牛柳（空气炸锅版）', category: '气调预制菜', difficulty: '高注水率下保嫩 — 复热后汁液流失率控制在8%以内' },
-        { title: '山姆原切风味西冷牛排', category: '低温调理肉', difficulty: '真空滚揉与保水性 — 滚揉时间/真空度/盐水注射率三参数联调' },
-        { title: '脆皮大肠预制菜', category: '休闲及其他', difficulty: '工业预熟与去腥 — 酶解嫩化+复合香料包掩蔽技术' },
-      ],
-    });
+  // Products (upsert by title)
+  const products = [
+    { title: '盒马黑椒牛柳（空气炸锅版）', category: '气调预制菜', difficulty: '高注水率下保嫩 — 复热后汁液流失率控制在8%以内' },
+    { title: '山姆原切风味西冷牛排', category: '低温调理肉', difficulty: '真空滚揉与保水性 — 滚揉时间/真空度/盐水注射率三参数联调' },
+    { title: '脆皮大肠预制菜', category: '休闲及其他', difficulty: '工业预熟与去腥 — 酶解嫩化+复合香料包掩蔽技术' },
+  ];
+  for (const p of products) {
+    const existing = await prisma.product.findFirst({ where: { title: p.title } });
+    if (!existing) {
+      await prisma.product.create({ data: p });
+    }
   }
 
-  const existingPilotLines = await prisma.pilotLine.count();
-  if (existingPilotLines === 0) {
-    await prisma.pilotLine.createMany({
-      data: [
-        { name: '120L 真空斩拌机', region: '华东区', status: 'AVAILABLE', specs: '容量120L | 最大转速6000rpm | 真空度-0.09MPa' },
-        { name: '连续式全自动烟熏炉', region: '华北区', status: 'BOOKED', specs: '产能500kg/h | 烟熏/蒸煮/干燥一体 | PLC自动控制' },
-        { name: '液氮速冻隧道产线', region: '华南区', status: 'AVAILABLE', specs: '-196液氮 | 产能2t/h | 降温速率15/min' },
-      ],
-    });
+  // Pilot lines (upsert by name)
+  const pilotLines = [
+    { name: '120L 真空斩拌机', region: '华东区', status: 'AVAILABLE', specs: '容量120L | 最大转速6000rpm | 真空度-0.09MPa' },
+    { name: '连续式全自动烟熏炉', region: '华北区', status: 'BOOKED', specs: '产能500kg/h | 烟熏/蒸煮/干燥一体 | PLC自动控制' },
+    { name: '液氮速冻隧道产线', region: '华南区', status: 'AVAILABLE', specs: '-196液氮 | 产能2t/h | 降温速率15/min' },
+  ];
+  for (const pl of pilotLines) {
+    const existing = await prisma.pilotLine.findFirst({ where: { name: pl.name } });
+    if (!existing) {
+      await prisma.pilotLine.create({ data: pl });
+    }
   }
+
+  console.log('Seed completed successfully');
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
