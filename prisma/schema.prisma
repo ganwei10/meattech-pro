@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("EDITOR")
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String
+  slug  String @unique
+  icon  String @default("folder")
+  order Int    @default(0)
+  posts Post[]
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String
+  cover       String?
+  author      String   @default("MeatTech Pro")
+  tags        String   @default("")
+  status      String   @default("PUBLISHED")
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  featured    Boolean  @default(false)
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  title       String
+  category    String
+  difficulty  String
+  reportUrl   String?
+  cover       String?
+  status      String   @default("PUBLISHED")
+  createdAt   DateTime @default(now())
+}
+
+model PilotLine {
+  id          Int      @id @default(autoincrement())
+  name        String
+  region      String
+  status      String   @default("AVAILABLE")
+  specs       String   @default("")
+  createdAt   DateTime @default(now())
+  bookings    Booking[]
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  line        PilotLine @relation(fields: [lineId], references: [id])
+  lineId      Int
+  contactName String
+  contactPhone String
+  company     String
+  requirement String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+}
+
+model Setting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
