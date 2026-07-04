@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { notifyNewBooking } from '@/lib/notify';
 
 export async function GET() {
   try {
@@ -33,6 +34,15 @@ export async function POST(request: Request) {
       },
       include: { line: true },
     });
+    // 异步发送通知（不阻塞预约创建响应）
+    notifyNewBooking({
+      id: booking.id,
+      contactName: booking.contactName,
+      company: booking.company,
+      line: booking.line,
+      requirement: booking.requirement,
+    }).catch(err => console.error('通知发送失败:', err));
+
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: '预约提交失败', detail: String(error) }, { status: 500 });
