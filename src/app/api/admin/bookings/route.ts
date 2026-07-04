@@ -12,12 +12,38 @@ export async function GET(request: Request) {
   }
 
   try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = 20;
+
+    // 构建筛选条件
+    const where: any = {};
+    if (status) where.status = status;
+    if (startDate || endDate) {
+      where.OR = [
+        { preferredDate: { gte: startDate || undefined, lte: endDate || undefined } },
+        {
+          createdAt: {
+            gte: startDate ? new Date(startDate) : undefined,
+            lte: endDate ? new Date(endDate + 'T23:59:59') : undefined,
+          },
+        },
+      ];
+    }
+
+    const total = await prisma.booking.count({ where });
     const bookings = await prisma.booking.findMany({
+      where,
       include: { line: true },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
-    return NextResponse.json({ bookings });
+    return NextResponse.json({ bookings, total, page, pageSize });
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch bookings', detail: String(error) },

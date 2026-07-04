@@ -81,11 +81,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navLinks = [
     { href: '/admin', label: '📊 仪表盘' },
-    { href: '/admin/posts', label: '📝 文章管理' },
-    { href: '/admin/posts/new', label: '➕ 发布文章' },
-    { href: '/admin/pilot-lines', label: '🏭 产线管理' },
     { href: '/admin/bookings', label: '📅 预约管理' },
+    { href: '/admin/bookings/calendar', label: '📆 预约日历' },
     { href: '/admin/bills', label: '📄 账单管理' },
+    { href: '/admin/pilot-lines', label: '🏭 产线管理' },
+    { href: '/admin/customers', label: '👥 客户管理' },
+    { href: '/admin/reports', label: '📈 报表统计' },
+    { href: '/admin/posts', label: '📝 文章管理' },
     { href: '/admin/categories', label: '📁 分类管理' },
     { href: '/admin/settings', label: '⚙️ 系统设置' },
   ];
