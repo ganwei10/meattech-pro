@@ -8,7 +8,7 @@ import HomePageCarousel from '@/components/HomePageCarousel';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting, footerSetting] = await Promise.all([
+  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting, footerSetting, pilotSetting] = await Promise.all([
     prisma.post.findMany({ where: { status: 'PUBLISHED', featured: true }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 3 }),
     prisma.post.findMany({ where: { status: 'PUBLISHED' }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 6 }),
     prisma.category.findMany({ orderBy: { order: 'asc' }, include: { _count: { select: { posts: true } } } }),
@@ -16,6 +16,7 @@ export default async function HomePage() {
     prisma.setting.findUnique({ where: { key: 'homepage_carousel' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_industry' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_footer' } }),
+    prisma.setting.findUnique({ where: { key: 'homepage_pilot' } }),
   ]);
   // Safe PilotLine query (may fallback to SELECT * if DB not migrated yet)
   const pilotLines = await safeFindPilotLines('desc');
@@ -81,6 +82,39 @@ export default async function HomePage() {
     ];
   }
 
+  // Parse pilot center settings (CMS-managed)
+  let pilotConfig: {
+    slogan: string;
+    title: string;
+    subtitle: string;
+    cooperationModels: { icon: string; title: string; desc: string; bg: string; borderColor: string; color: string }[];
+  } = {
+    slogan: '💡 核心创新板块',
+    title: '柔性中试中心 —— 在线预约你的肉品工业实验室',
+    subtitle: '无需买设备，盘活全行业闲置产能，打造肉类行业的"药明康德（CRO）"',
+    cooperationModels: [
+      { icon: '🎓', title: '找专家、做大改动', desc: '引流到高校科研院所，走CRO高客单价分成模式', bg: 'linear-gradient(135deg, #DBEAFE 0%, #EFF6FF 100%)', borderColor: '#BFDBFE', color: '#1E3A8A' },
+      { icon: '🏭', title: '初创品牌、预制菜试错', desc: '推荐到公共中试仓，走标准场租抽佣，政府扶持收费透明', bg: 'linear-gradient(135deg, #D1FAE5 0%, #ECFDF5 100%)', borderColor: '#A7F3D0', color: '#065F46' },
+      { icon: '🧪', title: '调风味、做爆款逆向', desc: '撮合到辅料巨头演示中心，辅料带货换取产线开放', bg: 'linear-gradient(135deg, #FEF3C7 0%, #FFFBEB 100%)', borderColor: '#FDE68A', color: '#92400E' },
+    ],
+  };
+  try {
+    if (pilotSetting) {
+      const pc = JSON.parse(pilotSetting.value);
+      pilotConfig = { ...pilotConfig, ...pc };
+    }
+  } catch { /* defaults */ }
+
+  // Group pilot lines by region for multi-region display
+  const regionOrder = ['华南', '华东', '华北', '华中', '西南', '东北', '其他'];
+  const linesByRegion: Record<string, typeof pilotLines> = {};
+  for (const line of pilotLines) {
+    const r = regionOrder.includes(line.region) ? line.region : '其他';
+    if (!linesByRegion[r]) linesByRegion[r] = [];
+    linesByRegion[r].push(line);
+  }
+  const activeRegions = regionOrder.filter(r => linesByRegion[r] && linesByRegion[r].length > 0);
+
   const banners = ['banner-1', 'banner-2', 'banner-3'];
   const bannersMap: Record<string, string> = { '气调预制菜': 'banner-1', '低温调理肉': 'banner-2', '休闲及其他': 'banner-3' };
   const bannerIcons: Record<string, string> = { '气调预制菜': '🍳', '低温调理肉': '🥩', '休闲及其他': '🌶️' };
@@ -90,27 +124,42 @@ export default async function HomePage() {
       <Header />
       <section className="hero" id="hero">
         <div className="container">
-          <div className="hero-top">
-            <h1 className="hero-slogan">赋能每一位肉品工艺工程师</h1>
-            <p className="hero-sub">—— 从深度技术长文到中试产线预约，从疑难问答到同行交流，全链路服务肉制品研发</p>
-          </div>
           <div className="hero-grid">
-            <HomePageCarousel items={carouselItems} />
-            <div className="tool-box" id="tools">
-              <Link href="/tool/gb2760" className="tool-card">
-                <div className="tool-icon" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📊</div>
-                <div className="tool-info"><h4>GB 2760 添加剂限量计算器</h4><p>输入添加剂名称，一键合规审查</p></div>
-                <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
-              </Link>
-              <Link href="/tool/troubleshoot" className="tool-card">
-                <div className="tool-icon" style={{ background: '#FEE2E2', color: '#991B1B' }}>🚨</div>
-                <div className="tool-info"><h4>肉制品车间故障智能排查矩阵</h4><p>解决出水、散肉、色泽不均等顽疾</p></div>
-                <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
-              </Link>
-              <Link href="/tool/pilot-map" className="tool-card">
-                <div className="tool-icon" style={{ background: '#D1FAE5', color: '#065F46' }}>🗺️</div>
-                <div className="tool-info"><h4>全国肉类共享中试产线地图</h4><p>在线预约闲置产能，轻资产研发</p></div>
-                <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
+            {/* Left: slogan + CTA */}
+            <div className="hero-left">
+              <span className="hero-badge">🥩 肉制品研发与智能中试平台</span>
+              <h1 className="hero-slogan">赋能每一位肉品工艺工程师</h1>
+              <p className="hero-sub">从深度技术长文到中试产线预约，从疑难问答到同行交流，全链路服务肉制品研发</p>
+              <div className="hero-cta-row">
+                <Link href="/community" className="hero-cta hero-cta-primary">💬 进入工艺问答讨论</Link>
+                <Link href="/booking" className="hero-cta hero-cta-secondary">🏭 预约中试线</Link>
+              </div>
+            </div>
+            {/* Right: carousel + tools + discussion bar */}
+            <div className="hero-right">
+              <HomePageCarousel items={carouselItems} />
+              <div className="tool-box" id="tools">
+                <Link href="/tool/gb2760" className="tool-card">
+                  <div className="tool-icon" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📊</div>
+                  <div className="tool-info"><h4>GB 2760 添加剂限量计算器</h4><p>输入添加剂名称，一键合规审查</p></div>
+                  <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
+                </Link>
+                <Link href="/tool/troubleshoot" className="tool-card">
+                  <div className="tool-icon" style={{ background: '#FEE2E2', color: '#991B1B' }}>🚨</div>
+                  <div className="tool-info"><h4>肉制品车间故障智能排查矩阵</h4><p>解决出水、散肉、色泽不均等顽疾</p></div>
+                  <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
+                </Link>
+                <Link href="/tool/pilot-map" className="tool-card">
+                  <div className="tool-icon" style={{ background: '#D1FAE5', color: '#065F46' }}>🗺️</div>
+                  <div className="tool-info"><h4>全国肉类共享中试产线地图</h4><p>在线预约闲置产能，轻资产研发</p></div>
+                  <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
+                </Link>
+              </div>
+              {/* Discussion bar - prominent entry to community */}
+              <Link href="/community" className="hero-discussion-bar">
+                <span className="pulse-dot"></span>
+                <span style={{ fontSize: '.88rem', fontWeight: 600 }}>🔥 工艺工程师在线讨论中</span>
+                <span style={{ fontSize: '.82rem', opacity: .75, marginLeft: 'auto' }}>立即参与 →</span>
               </Link>
             </div>
           </div>
@@ -196,36 +245,29 @@ export default async function HomePage() {
       <section className="section-pilot section-padding" id="pilot">
         <div className="container">
           <div className="pilot-header">
-            <span className="slogan">💡 核心创新板块</span>
-            <h2 className="pilot-title">柔性中试中心 —— 在线预约你的肉品工业实验室</h2>
-            <p className="pilot-sub">无需买设备，盘活全行业闲置产能，打造肉类行业的"药明康德（CRO）"</p>
+            <span className="slogan">{pilotConfig.slogan}</span>
+            <h2 className="pilot-title">{pilotConfig.title}</h2>
+            <p className="pilot-sub">{pilotConfig.subtitle}</p>
           </div>
 
-          {/* 三类合作模式 */}
+          {/* 三类合作模式 (CMS-managed) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
-            <Link href="/tool/pilot-map" style={{ background: 'linear-gradient(135deg, #DBEAFE 0%, #EFF6FF 100%)', borderRadius: 12, padding: 24, textDecoration: 'none', border: '1px solid #BFDBFE', transition: 'transform .2s' }}>
-              <div style={{ fontSize: '2rem', marginBottom: 8 }}>🎓</div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A8A', marginBottom: 6 }}>找专家、做大改动</h4>
-              <p style={{ fontSize: '.82rem', color: '#374151', lineHeight: 1.5, margin: 0 }}>引流到华南理工、华农、省农科院等高校科研院所，走CRO高客单价分成模式</p>
-            </Link>
-            <Link href="/tool/pilot-map" style={{ background: 'linear-gradient(135deg, #D1FAE5 0%, #ECFDF5 100%)', borderRadius: 12, padding: 24, textDecoration: 'none', border: '1px solid #A7F3D0', transition: 'transform .2s' }}>
-              <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏭</div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#065F46', marginBottom: 6 }}>初创品牌、预制菜试错</h4>
-              <p style={{ fontSize: '.82rem', color: '#374151', lineHeight: 1.5, margin: 0 }}>推荐到佛山顺德、肇庆高要等公共中试仓，走标准场租抽佣，政府扶持收费透明</p>
-            </Link>
-            <Link href="/tool/pilot-map" style={{ background: 'linear-gradient(135deg, #FEF3C7 0%, #FFFBEB 100%)', borderRadius: 12, padding: 24, textDecoration: 'none', border: '1px solid #FDE68A', transition: 'transform .2s' }}>
-              <div style={{ fontSize: '2rem', marginBottom: 8 }}>🧪</div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#92400E', marginBottom: 6 }}>调风味、做爆款逆向</h4>
-              <p style={{ fontSize: '.82rem', color: '#374151', lineHeight: 1.5, margin: 0 }}>撮合到IFF、奇华顿、安琪酵母等辅料巨头演示中心，辅料带货换取产线开放</p>
-            </Link>
+            {pilotConfig.cooperationModels.map((model, i) => (
+              <Link key={i} href="/tool/pilot-map" style={{ background: model.bg, borderRadius: 12, padding: 24, textDecoration: 'none', border: `1px solid ${model.borderColor}`, transition: 'transform .2s' }}>
+                <div style={{ fontSize: '2rem', marginBottom: 8 }}>{model.icon}</div>
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: model.color, marginBottom: 6 }}>{model.title}</h4>
+                <p style={{ fontSize: '.82rem', color: '#374151', lineHeight: 1.5, margin: 0 }}>{model.desc}</p>
+              </Link>
+            ))}
           </div>
 
+          {/* Multi-region pilot lines display */}
           <div className="pilot-grid">
             <div className="pilot-card">
-              <h4>🗺️ 华南共享中试基地</h4>
-              <p style={{ fontSize: '.82rem', opacity: .7, marginBottom: '16px' }}>粤港澳大湾区 · 三类机构全覆盖</p>
+              <h4>🗺️ 全国共享中试基地（{activeRegions.length}个区域）</h4>
+              <p style={{ fontSize: '.82rem', opacity: .7, marginBottom: '16px' }}>覆盖全国 · 三类机构（高校/产业园/辅料企业）</p>
               <div className="line-list">
-                {pilotLines.slice(0, 6).map((line) => (
+                {pilotLines.slice(0, 8).map((line) => (
                   <Link key={line.id} href={`/booking/${line.id}`} className="line-item" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div className="line-info">
                       <span className="line-region">
@@ -272,52 +314,23 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding" id="industry" style={{ background: '#fff' }}>
-        <div className="container">
-          <div className="section-header">
-            <span style={{ fontSize: '1.5rem' }}>⚙️</span>
-            <h2 className="section-title">工业4.0</h2>
-            <span className="section-badge">设备选型与原辅料应用指南</span>
-          </div>
-          <p className="section-intro">拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* CMS-managed articles */}
-            {industryPosts.map((post) => (
-              <Link href={`/article/${post.slug}`} key={`post-${post.id}`} className="industry-item">
-                <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: '#DBEAFE', color: '#1E40AF' }}>📄</div>
-                <div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: '#DBEAFE', color: '#1E40AF' }}>{post.tags.split(',')[0] || post.category.name}</span>{post.title}</h4>
-                  <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{post.excerpt}</p>
-                </div>
-              </Link>
-            ))}
-            {/* CMS-managed industry items from Setting */}
-            {industryItems.map((item, i) => {
-              const inner = (
-                <>
-                  <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: item.tagBg, color: item.tagColor }}>{item.icon}</div>
-                  <div>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: item.tagBg, color: item.tagColor }}>{item.tag}</span>{item.title}</h4>
-                    <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{item.desc}</p>
-                  </div>
-                </>
-              );
-              const href = item.link || `/search?q=${encodeURIComponent(item.title)}`;
-              return (
-                <Link key={`ind-${i}`} href={href} className="industry-item">{inner}</Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 工艺工程师赋能社区 */}
+      {/* 工艺工程师讨论社区 — 强化突出 */}
       <section className="section-padding" id="community" style={{ background: 'linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%)' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <span style={{ display: 'inline-block', padding: '4px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.15)', color: '#FCD34D', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }}>工程师赋能社区</span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>从知识获取到疑难解答，全链路服务肉品工艺工程师</h2>
-            <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', maxWidth: 700, margin: '0 auto' }}>无论你是刚入行的工艺新人，还是深耕肉品研发多年的技术总监，在这里都能找到你需要的资源与同行</p>
+            <span style={{ display: 'inline-block', padding: '4px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.15)', color: '#FCD34D', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }}>💬 工艺工程师讨论社区</span>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>有问题随时问，有经验随时分享</h2>
+            <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', maxWidth: 700, margin: '0 auto' }}>出水、散肉、色泽不均、保质期不达标……遇到工艺难题，发帖求助同行专家。已有 {allPosts.length} 篇技术内容沉淀，持续更新中。</p>
+          </div>
+
+          {/* 快速提问入口 — 大号CTA */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 40 }}>
+            <Link href="/community/ask" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', borderRadius: 28, background: '#FCD34D', color: '#1E3A8A', fontSize: '1rem', fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 20px rgba(252,211,77,0.3)' }}>
+              ✏️ 立即提问
+            </Link>
+            <Link href="/community" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', borderRadius: 28, background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: '1rem', fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)' }}>
+              💬 浏览全部讨论
+            </Link>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 40 }}>
@@ -333,14 +346,18 @@ export default async function HomePage() {
               <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>浏览全部技术文章 →</span>
             </Link>
 
-            {/* 疑难问答 */}
-            <Link href="/community" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>💬</div>
+            {/* 疑难问答 — 最突出 */}
+            <Link href="/community" style={{ background: 'rgba(252,211,77,0.12)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '2px solid rgba(252,211,77,0.4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <span style={{ fontSize: '2.5rem' }}>💬</span>
+                <span style={{ padding: '2px 10px', borderRadius: 12, background: '#FCD34D', color: '#1E3A8A', fontSize: '.72rem', fontWeight: 700 }}>核心功能</span>
+              </div>
               <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>疑难杂症讨论</h4>
               <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>出水、散肉、色泽不均、保质期不达标……遇到工艺难题？发帖求助，同行专家来解答。</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>在线提问</span>
-                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>同行互助</span>
+                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(252,211,77,0.2)', color: '#FCD34D' }}>在线提问</span>
+                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(252,211,77,0.2)', color: '#FCD34D' }}>同行互助</span>
+                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(252,211,77,0.2)', color: '#FCD34D' }}>专家解答</span>
               </div>
               <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>进入讨论社区 →</span>
             </Link>
@@ -385,6 +402,45 @@ export default async function HomePage() {
                 </div>
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding" id="industry" style={{ background: '#fff' }}>
+        <div className="container">
+          <div className="section-header">
+            <span style={{ fontSize: '1.5rem' }}>⚙️</span>
+            <h2 className="section-title">工业4.0</h2>
+            <span className="section-badge">设备选型与原辅料应用指南</span>
+          </div>
+          <p className="section-intro">拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* CMS-managed articles */}
+            {industryPosts.map((post) => (
+              <Link href={`/article/${post.slug}`} key={`post-${post.id}`} className="industry-item">
+                <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: '#DBEAFE', color: '#1E40AF' }}>📄</div>
+                <div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: '#DBEAFE', color: '#1E40AF' }}>{post.tags.split(',')[0] || post.category.name}</span>{post.title}</h4>
+                  <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{post.excerpt}</p>
+                </div>
+              </Link>
+            ))}
+            {/* CMS-managed industry items from Setting */}
+            {industryItems.map((item, i) => {
+              const inner = (
+                <>
+                  <div style={{ width: 56, height: 56, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, background: item.tagBg, color: item.tagColor }}>{item.icon}</div>
+                  <div>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}><span style={{ fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4, marginRight: 8, background: item.tagBg, color: item.tagColor }}>{item.tag}</span>{item.title}</h4>
+                    <p style={{ fontSize: '.9rem', color: '#6B7280', lineHeight: 1.6 }}>{item.desc}</p>
+                  </div>
+                </>
+              );
+              const href = item.link || `/search?q=${encodeURIComponent(item.title)}`;
+              return (
+                <Link key={`ind-${i}`} href={href} className="industry-item">{inner}</Link>
+              );
+            })}
           </div>
         </div>
       </section>

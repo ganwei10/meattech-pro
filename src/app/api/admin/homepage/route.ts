@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const settings = await prisma.setting.findMany({
       where: {
-        key: { in: ['homepage_carousel', 'homepage_industry', 'homepage_footer'] },
+        key: { in: ['homepage_carousel', 'homepage_industry', 'homepage_footer', 'homepage_pilot'] },
       },
     });
 
@@ -31,6 +31,7 @@ export async function GET() {
       carousel: config.homepage_carousel || [],
       industry: config.homepage_industry || [],
       footer: config.homepage_footer || { title: '', subtitle: '', groups: [] },
+      pilot: config.homepage_pilot || null,
     });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch homepage config', detail: String(error) }, { status: 500 });
@@ -46,36 +47,31 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const { carousel, industry, footer } = body;
+    const { carousel, industry, footer, pilot } = body;
+
+    const upsertSetting = async (key: string, value: string) => {
+      const existing = await prisma.setting.findUnique({ where: { key } });
+      if (existing) {
+        await prisma.setting.update({ where: { key }, data: { value } });
+      } else {
+        await prisma.setting.create({ data: { key, value } });
+      }
+    };
 
     if (carousel !== undefined) {
-      const existing = await prisma.setting.findUnique({ where: { key: 'homepage_carousel' } });
-      const value = JSON.stringify(carousel);
-      if (existing) {
-        await prisma.setting.update({ where: { key: 'homepage_carousel' }, data: { value } });
-      } else {
-        await prisma.setting.create({ data: { key: 'homepage_carousel', value } });
-      }
+      await upsertSetting('homepage_carousel', JSON.stringify(carousel));
     }
 
     if (industry !== undefined) {
-      const existing = await prisma.setting.findUnique({ where: { key: 'homepage_industry' } });
-      const value = JSON.stringify(industry);
-      if (existing) {
-        await prisma.setting.update({ where: { key: 'homepage_industry' }, data: { value } });
-      } else {
-        await prisma.setting.create({ data: { key: 'homepage_industry', value } });
-      }
+      await upsertSetting('homepage_industry', JSON.stringify(industry));
     }
 
     if (footer !== undefined) {
-      const existing = await prisma.setting.findUnique({ where: { key: 'homepage_footer' } });
-      const value = JSON.stringify(footer);
-      if (existing) {
-        await prisma.setting.update({ where: { key: 'homepage_footer' }, data: { value } });
-      } else {
-        await prisma.setting.create({ data: { key: 'homepage_footer', value } });
-      }
+      await upsertSetting('homepage_footer', JSON.stringify(footer));
+    }
+
+    if (pilot !== undefined) {
+      await upsertSetting('homepage_pilot', JSON.stringify(pilot));
     }
 
     return NextResponse.json({ ok: true });

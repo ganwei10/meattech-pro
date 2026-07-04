@@ -45,8 +45,7 @@ export default function Header() {
           <a href="/">首页</a>
           <a href="/#reverse">爆款逆向库</a>
           <a href="/#science">工艺配方智库</a>
-          <a href="/community">工艺问答</a>
-          <a href="/#tools">数字工具箱</a>
+          <a href="/community" style={{ color: '#FCD34D', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>💬 工艺问答</a>
           <a href="/#pilot">共享中试中心</a>
           <a href="/#industry">供应链选型</a>
         </nav>
@@ -80,6 +79,7 @@ export default function Header() {
             )
           )}
 
+          <Link href="/community/ask" style={{ background: 'rgba(252,211,77,0.2)', color: '#FCD34D', padding: '6px 16px', borderRadius: 20, fontSize: '.85rem', fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(252,211,77,0.4)', whiteSpace: 'nowrap' }}>✏️ 提问</Link>
           <Link href="/booking" className="btn-book">预约中试线🔥</Link>
         </div>
       </div>
