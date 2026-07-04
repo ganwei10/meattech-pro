@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import * as XLSX from 'xlsx';
 
 interface Bill {
   id: number;
@@ -79,12 +80,39 @@ export default function BillsAdminPage() {
     return <span style={{ background: s.color + '20', color: s.color, padding: '2px 8px', borderRadius: 4, fontSize: '.75rem' }}>{s.label}</span>;
   };
 
+  // 导出 Excel
+  const exportToExcel = () => {
+    const exportData = bills.map(b => ({
+      '账单编号': `#${b.id}`,
+      '客户姓名': b.customerName,
+      '电话': b.customerPhone,
+      '邮箱': b.customerEmail,
+      '公司': b.company,
+      '产线': b.line.name,
+      '金额': b.amount,
+      '服务费': b.serviceFee,
+      '总计': b.totalAmount,
+      '状态': b.status === 'PAID' ? '已支付' : b.status === 'PENDING' ? '待支付' : '已取消',
+      '创建时间': new Date(b.createdAt).toLocaleString('zh-CN'),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '账单列表');
+    XLSX.writeFile(wb, `账单列表_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const totalRevenue = bills.filter(b => b.status === 'PAID').reduce((sum, b) => sum + b.totalAmount, 0);
   const pendingAmount = bills.filter(b => b.status === 'PENDING').reduce((sum, b) => sum + b.totalAmount, 0);
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 24 }}>📄 账单管理</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>📄 账单管理</h1>
+        <button onClick={exportToExcel} style={{ padding: '8px 16px', background: '#059669', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: '.9rem' }}>
+          📊 导出 Excel
+        </button>
+      </div>
 
       {message && (
         <div style={{ padding: '12px 16px', borderRadius: 8, marginBottom: 16, background: message.includes('✅') ? '#ECFDF5' : '#FEE2E2', color: message.includes('✅') ? '#059669' : '#DC2626' }}>
