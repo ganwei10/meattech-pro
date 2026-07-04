@@ -8,13 +8,14 @@ import HomePageCarousel from '@/components/HomePageCarousel';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting] = await Promise.all([
+  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting, footerSetting] = await Promise.all([
     prisma.post.findMany({ where: { status: 'PUBLISHED', featured: true }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 3 }),
     prisma.post.findMany({ where: { status: 'PUBLISHED' }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 6 }),
     prisma.category.findMany({ orderBy: { order: 'asc' }, include: { _count: { select: { posts: true } } } }),
     prisma.product.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }] }),
     prisma.setting.findUnique({ where: { key: 'homepage_carousel' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_industry' } }),
+    prisma.setting.findUnique({ where: { key: 'homepage_footer' } }),
   ]);
   // Safe PilotLine query (may fallback to SELECT * if DB not migrated yet)
   const pilotLines = await safeFindPilotLines('desc');
@@ -62,6 +63,24 @@ export default async function HomePage() {
     ];
   }
 
+  // Parse footer community groups
+  let footerGroups: { icon: string; name: string; qrcode?: string }[] = [];
+  let footerTitle = '📱 加入肉品工程师日常技术互助群（微信私域沉淀）';
+  try {
+    if (footerSetting) {
+      const fc = JSON.parse(footerSetting.value);
+      footerTitle = fc.title || footerTitle;
+      footerGroups = fc.groups || [];
+    }
+  } catch { /* defaults */ }
+  if (footerGroups.length === 0) {
+    footerGroups = [
+      { icon: '🍖', name: '中式酱卤交流群', qrcode: '' },
+      { icon: '🥓', name: '西式低温技术群', qrcode: '' },
+      { icon: '🍱', name: '肉品预制菜研发群', qrcode: '' },
+    ];
+  }
+
   const banners = ['banner-1', 'banner-2', 'banner-3'];
   const bannersMap: Record<string, string> = { '气调预制菜': 'banner-1', '低温调理肉': 'banner-2', '休闲及其他': 'banner-3' };
   const bannerIcons: Record<string, string> = { '气调预制菜': '🍳', '低温调理肉': '🥩', '休闲及其他': '🌶️' };
@@ -72,8 +91,8 @@ export default async function HomePage() {
       <section className="hero" id="hero">
         <div className="container">
           <div className="hero-top">
-            <h1 className="hero-slogan">让每一公斤肉发挥最大价值</h1>
-            <p className="hero-sub">—— 工业化肉制品研发与智能中试平台</p>
+            <h1 className="hero-slogan">赋能每一位肉品工艺工程师</h1>
+            <p className="hero-sub">—— 从深度技术长文到中试产线预约，从疑难问答到同行交流，全链路服务肉制品研发</p>
           </div>
           <div className="hero-grid">
             <HomePageCarousel items={carouselItems} />
@@ -288,6 +307,84 @@ export default async function HomePage() {
                 <Link key={`ind-${i}`} href={href} className="industry-item">{inner}</Link>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* 工艺工程师赋能社区 */}
+      <section className="section-padding" id="community" style={{ background: 'linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%)' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <span style={{ display: 'inline-block', padding: '4px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.15)', color: '#FCD34D', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }}>工程师赋能社区</span>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>从知识获取到疑难解答，全链路服务肉品工艺工程师</h2>
+            <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', maxWidth: 700, margin: '0 auto' }}>无论你是刚入行的工艺新人，还是深耕肉品研发多年的技术总监，在这里都能找到你需要的资源与同行</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 40 }}>
+            {/* 技术长文 */}
+            <Link href="/category/chinese-braised" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📚</div>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>深度技术长文</h4>
+              <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>涵盖原料改性、工艺优化、添加剂应用、故障排查等实战内容。后台随时更新，前沿技术持续沉淀。</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{allPosts.length} 篇长文</span>
+                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{categories.length} 个品类</span>
+              </div>
+              <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>浏览全部技术文章 →</span>
+            </Link>
+
+            {/* 疑难问答 */}
+            <Link href="/community" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>💬</div>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>疑难杂症讨论</h4>
+              <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>出水、散肉、色泽不均、保质期不达标……遇到工艺难题？发帖求助，同行专家来解答。</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>在线提问</span>
+                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>同行互助</span>
+              </div>
+              <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>进入讨论社区 →</span>
+            </Link>
+
+            {/* 微信社群 */}
+            <a href="#footer" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📱</div>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>技术互助社群</h4>
+              <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>{footerTitle.replace('📱 ', '')}，按品类分群，日常技术互助，私域深度沉淀。</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {footerGroups.slice(0, 3).map((g, i) => (
+                  <span key={i} style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{g.icon} {g.name}</span>
+                ))}
+              </div>
+              <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>扫码加入交流群 ↓</span>
+            </a>
+          </div>
+
+          {/* 工程师工具箱 */}
+          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 28, border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, textAlign: 'center' }}>工程师实战工具箱</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <Link href="/tool/gb2760" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
+                <span style={{ fontSize: '1.5rem' }}>📊</span>
+                <div>
+                  <div style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff' }}>GB 2760 添加剂计算器</div>
+                  <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)' }}>一键合规审查</div>
+                </div>
+              </Link>
+              <Link href="/tool/troubleshoot" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
+                <span style={{ fontSize: '1.5rem' }}>🚨</span>
+                <div>
+                  <div style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff' }}>故障智能排查矩阵</div>
+                  <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)' }}>出水散肉一键诊断</div>
+                </div>
+              </Link>
+              <Link href="/tool/pilot-map" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
+                <span style={{ fontSize: '1.5rem' }}>🗺️</span>
+                <div>
+                  <div style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff' }}>中试产线地图</div>
+                  <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)' }}>在线预约闲置产能</div>
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

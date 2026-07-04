@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!pathname) return;
     if (pathname.startsWith('/admin/bookings') || pathname.startsWith('/admin/bills') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/reports') || pathname.startsWith('/admin/pilot-lines')) {
       setExpandedSection('pilot');
-    } else if (pathname.startsWith('/admin/posts') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/media') || pathname.startsWith('/admin/products') || pathname.startsWith('/admin/homepage')) {
+    } else if (pathname.startsWith('/admin/posts') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/media') || pathname.startsWith('/admin/products') || pathname.startsWith('/admin/homepage') || pathname.startsWith('/admin/community')) {
       setExpandedSection('content');
     }
   }, [pathname]);
@@ -208,6 +208,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   background: isActive('/admin/homepage') ? 'rgba(255,255,255,0.12)' : 'transparent',
                   textDecoration: 'none', display: 'block'
                 }}>🏠 首页管理</Link>
+                <Link href="/admin/posts?category=community-qa" onClick={() => setPathname('/admin/community')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: pathname.startsWith('/admin/community') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>💬 工艺问答</Link>
               </div>
             )}
           </div>

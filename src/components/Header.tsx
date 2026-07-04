@@ -45,6 +45,7 @@ export default function Header() {
           <a href="/">首页</a>
           <a href="/#reverse">爆款逆向库</a>
           <a href="/#science">工艺配方智库</a>
+          <a href="/community">工艺问答</a>
           <a href="/#tools">数字工具箱</a>
           <a href="/#pilot">共享中试中心</a>
           <a href="/#industry">供应链选型</a>

@@ -209,6 +209,7 @@ export async function GET() {
       { name: '发酵与肉干制品', slug: 'fermented-dried', icon: '🧀', order: 4 },
       { name: '工艺问题', slug: 'process-issues', icon: '🔧', order: 5 },
       { name: '产品制作', slug: 'product-making', icon: '🍳', order: 6 },
+      { name: '工艺问答', slug: 'community-qa', icon: '💬', order: 7 },
     ];
     for (const cat of categories) {
       await prisma.category.upsert({
@@ -565,6 +566,15 @@ export async function GET() {
         { icon: '⚙️', tag: '机械选型', tagBg: '#DBEAFE', tagColor: '#1E40AF', title: '汇川/西门子 PLC 控制系统在现代化高速斩拌机中的温度精准控制实践', desc: '对比汇川H3U系列与西门子S7-1200在高速斩拌机（6000rpm）刀盘温度闭环控制中的响应精度与稳定性表现，涵盖PID参数整定方法。', link: '/search?q=PLC斩拌机' },
         { icon: '📦', tag: '包装创新', tagBg: '#D1FAE5', tagColor: '#065F46', title: '莫迪维克（Multivac）高阻隔气调包装对低温冷鲜肉货架期延长突破', desc: '基于Multivac R245封口机平台，测试70%O₂+30%CO₂气调配比下，不同阻隔膜对低温冷鲜猪肉货架期的影响。7层共挤膜可将货架期从12天延长至21天。', link: '/search?q=气调包装' },
       ]) },
+      { key: 'homepage_footer', value: JSON.stringify({
+        title: '📱 加入肉品工程师日常技术互助群（微信私域沉淀）',
+        subtitle: '按品类分群，扫码加入对应技术交流群',
+        groups: [
+          { icon: '🍖', name: '中式酱卤交流群', qrcode: '' },
+          { icon: '🥓', name: '西式低温技术群', qrcode: '' },
+          { icon: '🍱', name: '肉品预制菜研发群', qrcode: '' },
+        ],
+      }) },
     ];
     for (const s of homepageSettings) {
       await prisma.$executeRawUnsafe(

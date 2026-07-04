@@ -1,6 +1,29 @@
 import Link from 'next/link';
+import { prisma } from '@/lib/prisma';
 
-export default function Footer() {
+// Footer is an async server component — fetches footer config from Setting table
+export default async function Footer() {
+  // Fetch footer config from Setting table
+  let footerConfig: { title?: string; subtitle?: string; groups?: { icon: string; name: string; qrcode?: string }[] } = {};
+  try {
+    const setting = await prisma.setting.findUnique({ where: { key: 'homepage_footer' } });
+    if (setting) {
+      footerConfig = JSON.parse(setting.value);
+    }
+  } catch {
+    // Fallback to defaults below
+  }
+
+  const title = footerConfig.title || '📱 加入肉品工程师日常技术互助群（微信私域沉淀）';
+  const subtitle = footerConfig.subtitle || '';
+  const groups = footerConfig.groups && footerConfig.groups.length > 0
+    ? footerConfig.groups
+    : [
+        { icon: '🍖', name: '中式酱卤交流群', qrcode: '' },
+        { icon: '🥓', name: '西式低温技术群', qrcode: '' },
+        { icon: '🍱', name: '肉品预制菜研发群', qrcode: '' },
+      ];
+
   return (
     <footer className="footer">
       <div className="container">
@@ -16,20 +39,19 @@ export default function Footer() {
           </div>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <h5 style={{ color: '#fff', fontSize: '.95rem', fontWeight: 700, marginBottom: '20px' }}>📱 加入肉品工程师日常技术互助群（微信私域沉淀）</h5>
+          <h5 style={{ color: '#fff', fontSize: '.95rem', fontWeight: 700, marginBottom: '8px' }}>{title}</h5>
+          {subtitle && <p style={{ fontSize: '.8rem', opacity: .6, marginBottom: '20px' }}>{subtitle}</p>}
           <div className="qr-grid">
-            <div style={{ textAlign: 'center' }}>
-              <div className="qr-placeholder">🍖</div>
-              <span style={{ fontSize: '.78rem', opacity: .7 }}>中式酱卤交流群</span>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div className="qr-placeholder">🥓</div>
-              <span style={{ fontSize: '.78rem', opacity: .7 }}>西式低温技术群</span>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div className="qr-placeholder">🍱</div>
-              <span style={{ fontSize: '.78rem', opacity: .7 }}>肉品预制菜研发群</span>
-            </div>
+            {groups.map((group, i) => (
+              <div key={i} style={{ textAlign: 'center' }}>
+                {group.qrcode ? (
+                  <img src={group.qrcode} alt={group.name} style={{ width: 100, height: 100, borderRadius: 12, background: '#fff', objectFit: 'cover' }} />
+                ) : (
+                  <div className="qr-placeholder">{group.icon || '🍖'}</div>
+                )}
+                <span style={{ fontSize: '.78rem', opacity: .7 }}>{group.name}</span>
+              </div>
+            ))}
           </div>
         </div>
         <div style={{ textAlign: 'center', fontSize: '.8rem', opacity: .5, paddingTop: '24px' }}>
