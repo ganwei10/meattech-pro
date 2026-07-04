@@ -25,11 +25,56 @@ interface PilotConfig {
   cooperationModels: CooperationModel[];
 }
 
+interface SectionsConfig {
+  heroBadge: string;
+  heroSlogan: string;
+  heroSub: string;
+  heroCtaPrimary: string;
+  heroCtaSecondary: string;
+  reverseIcon: string;
+  reverseTitle: string;
+  reverseBadge: string;
+  reverseIntro: string;
+  scienceIcon: string;
+  scienceTitle: string;
+  scienceBadge: string;
+  scienceIntro: string;
+  communityBadge: string;
+  communityTitle: string;
+  communitySub: string;
+  industryIcon: string;
+  industryTitle: string;
+  industryBadge: string;
+  industryIntro: string;
+}
+
 export default function HomepageAdminPage() {
-  const [activeTab, setActiveTab] = useState<'carousel' | 'industry' | 'pilot' | 'footer'>('carousel');
+  const [activeTab, setActiveTab] = useState<'carousel' | 'industry' | 'pilot' | 'footer' | 'sections'>('carousel');
   const [carousel, setCarousel] = useState<CarouselItem[]>([]);
   const [industry, setIndustry] = useState<IndustryItem[]>([]);
   const [footer, setFooter] = useState<FooterConfig>({ title: '', subtitle: '', groups: [] });
+  const [sections, setSections] = useState<SectionsConfig>({
+    heroBadge: '🥩 肉制品研发与智能中试平台',
+    heroSlogan: '赋能每一位肉品工艺工程师',
+    heroSub: '从深度技术长文到中试产线预约，从疑难问答到同行交流，全链路服务肉制品研发',
+    heroCtaPrimary: '💬 进入工艺问答讨论',
+    heroCtaSecondary: '🏭 预约中试线',
+    reverseIcon: '📌',
+    reverseTitle: '货架直通车间',
+    reverseBadge: '商超爆款逆向研发',
+    reverseIntro: '追踪山姆、盒马等零售终端销量走势，逆向拆解工业化量产工艺',
+    scienceIcon: '🔬',
+    scienceTitle: '硬核肉品科学',
+    scienceBadge: '工业配方重构与故障排查矩阵',
+    scienceIntro: '深入肉类生物化学底层，解决清洁标签、减盐减硝等现代改性需求',
+    communityBadge: '💬 工艺工程师讨论社区',
+    communityTitle: '有问题随时问，有经验随时分享',
+    communitySub: '出水、散肉、色泽不均、保质期不达标……遇到工艺难题，发帖求助同行专家。已有技术内容沉淀，持续更新中。',
+    industryIcon: '⚙️',
+    industryTitle: '工业4.0',
+    industryBadge: '设备选型与原辅料应用指南',
+    industryIntro: '拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"',
+  });
   const [pilot, setPilot] = useState<PilotConfig>({
     slogan: '💡 核心创新板块',
     title: '柔性中试中心 —— 在线预约你的肉品工业实验室',
@@ -55,6 +100,7 @@ export default function HomepageAdminPage() {
       setIndustry(data.industry || []);
       setFooter(data.footer || { title: '', subtitle: '', groups: [] });
       if (data.pilot) setPilot(data.pilot);
+      if (data.sections) setSections(data.sections);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
@@ -95,6 +141,15 @@ export default function HomepageAdminPage() {
     setSaving(false);
   };
 
+  const saveSections = async () => {
+    setSaving(true); setMessage('');
+    try {
+      const res = await fetch('/api/admin/homepage', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sections }) });
+      if (res.ok) setMessage('✅ 首页文案配置已保存'); else setMessage('❌ 保存失败');
+    } catch { setMessage('❌ 保存失败'); }
+    setSaving(false);
+  };
+
   const bgOptions = ['carousel-bg-1', 'carousel-bg-2', 'carousel-bg-3'];
   const iconOptions = ['🔬', '⚙️', '📦', '🏭', '🧪', '📊', '🥩', '🍳', '🌶️', '❄️', '🎓', '🗺️'];
   const modelIconOptions = ['🎓', '🏭', '🧪', '🔬', '⚙️', '📦', '📊', '🥩', '🍳', '🌶️', '❄️', '🗺️'];
@@ -120,11 +175,132 @@ export default function HomepageAdminPage() {
       )}
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        <button onClick={() => setActiveTab('sections')} style={tabBtnStyle(activeTab === 'sections')}>📝 首页文案</button>
         <button onClick={() => setActiveTab('carousel')} style={tabBtnStyle(activeTab === 'carousel')}>🎠 轮播图管理</button>
         <button onClick={() => setActiveTab('pilot')} style={tabBtnStyle(activeTab === 'pilot')}>🏭 中试中心</button>
         <button onClick={() => setActiveTab('industry')} style={tabBtnStyle(activeTab === 'industry')}>⚙️ 工业4.0栏目</button>
         <button onClick={() => setActiveTab('footer')} style={tabBtnStyle(activeTab === 'footer')}>📱 社群管理</button>
       </div>
+
+      {/* 首页文案管理 */}
+      {activeTab === 'sections' && (
+        <div>
+          {/* Hero 区域 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🎯 Hero 区域（首屏顶部）</h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>徽章标签</label>
+              <input type="text" value={sections.heroBadge} onChange={e => setSections({ ...sections, heroBadge: e.target.value })} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>主标语（大标题）</label>
+              <input type="text" value={sections.heroSlogan} onChange={e => setSections({ ...sections, heroSlogan: e.target.value })} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>副标题描述</label>
+              <textarea value={sections.heroSub} onChange={e => setSections({ ...sections, heroSub: e.target.value })} rows={2} style={inputStyle} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={labelStyle}>主按钮文字</label>
+                <input type="text" value={sections.heroCtaPrimary} onChange={e => setSections({ ...sections, heroCtaPrimary: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>次按钮文字</label>
+                <input type="text" value={sections.heroCtaSecondary} onChange={e => setSections({ ...sections, heroCtaSecondary: e.target.value })} style={inputStyle} />
+              </div>
+            </div>
+          </div>
+
+          {/* 货架直通车间 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>📌 货架直通车间板块</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>图标</label>
+                <input type="text" value={sections.reverseIcon} onChange={e => setSections({ ...sections, reverseIcon: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>标题</label>
+                <input type="text" value={sections.reverseTitle} onChange={e => setSections({ ...sections, reverseTitle: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>标签文字</label>
+                <input type="text" value={sections.reverseBadge} onChange={e => setSections({ ...sections, reverseBadge: e.target.value })} style={inputStyle} />
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>描述文字</label>
+              <textarea value={sections.reverseIntro} onChange={e => setSections({ ...sections, reverseIntro: e.target.value })} rows={2} style={inputStyle} />
+            </div>
+          </div>
+
+          {/* 硬核肉品科学 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🔬 硬核肉品科学板块</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>图标</label>
+                <input type="text" value={sections.scienceIcon} onChange={e => setSections({ ...sections, scienceIcon: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>标题</label>
+                <input type="text" value={sections.scienceTitle} onChange={e => setSections({ ...sections, scienceTitle: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>标签文字</label>
+                <input type="text" value={sections.scienceBadge} onChange={e => setSections({ ...sections, scienceBadge: e.target.value })} style={inputStyle} />
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>描述文字</label>
+              <textarea value={sections.scienceIntro} onChange={e => setSections({ ...sections, scienceIntro: e.target.value })} rows={2} style={inputStyle} />
+            </div>
+          </div>
+
+          {/* 工艺工程师讨论社区 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>💬 工艺工程师讨论社区板块</h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>徽章标签</label>
+              <input type="text" value={sections.communityBadge} onChange={e => setSections({ ...sections, communityBadge: e.target.value })} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>标题</label>
+              <input type="text" value={sections.communityTitle} onChange={e => setSections({ ...sections, communityTitle: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>描述文字</label>
+              <textarea value={sections.communitySub} onChange={e => setSections({ ...sections, communitySub: e.target.value })} rows={3} style={inputStyle} />
+            </div>
+          </div>
+
+          {/* 工业4.0 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>⚙️ 工业4.0板块</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>图标</label>
+                <input type="text" value={sections.industryIcon} onChange={e => setSections({ ...sections, industryIcon: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>标题</label>
+                <input type="text" value={sections.industryTitle} onChange={e => setSections({ ...sections, industryTitle: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>标签文字</label>
+                <input type="text" value={sections.industryBadge} onChange={e => setSections({ ...sections, industryBadge: e.target.value })} style={inputStyle} />
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>描述文字</label>
+              <textarea value={sections.industryIntro} onChange={e => setSections({ ...sections, industryIntro: e.target.value })} rows={2} style={inputStyle} />
+            </div>
+          </div>
+
+          <button onClick={saveSections} disabled={saving} style={btnSaveStyle}>{saving ? '保存中...' : '💾 保存首页文案配置'}</button>
+        </div>
+      )}
 
       {/* 中试中心管理 */}
       {activeTab === 'pilot' && (

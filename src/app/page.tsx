@@ -8,7 +8,7 @@ import HomePageCarousel from '@/components/HomePageCarousel';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting, footerSetting, pilotSetting] = await Promise.all([
+  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting, footerSetting, pilotSetting, sectionsSetting] = await Promise.all([
     prisma.post.findMany({ where: { status: 'PUBLISHED', featured: true }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 3 }),
     prisma.post.findMany({ where: { status: 'PUBLISHED' }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 6 }),
     prisma.category.findMany({ orderBy: { order: 'asc' }, include: { _count: { select: { posts: true } } } }),
@@ -17,6 +17,7 @@ export default async function HomePage() {
     prisma.setting.findUnique({ where: { key: 'homepage_industry' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_footer' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_pilot' } }),
+    prisma.setting.findUnique({ where: { key: 'homepage_sections' } }),
   ]);
   // Safe PilotLine query (may fallback to SELECT * if DB not migrated yet)
   const pilotLines = await safeFindPilotLines('desc');
@@ -42,10 +43,21 @@ export default async function HomePage() {
     }
     return item;
   });
+
+  // Add platform highlight slide at the beginning
+  carouselItems.unshift({
+    tag: '平台介绍',
+    title: '肉制品研发与智能中试平台',
+    desc: '从深度技术长文到中试产线预约，从工艺问答到同行交流——全链路服务肉制品研发，赋能每一位肉品工艺工程师',
+    bg: 'carousel-bg-4',
+    btn: '了解平台全部功能',
+    link: '/tool/pilot-map',
+  });
+
   // Add featured post as carousel item if available
   const carouselPost = featuredPosts[0] || allPosts[0];
   if (carouselPost) {
-    carouselItems.splice(1, 0, { tag: '技术前沿', title: carouselPost.title.slice(0, 20) + '...', desc: carouselPost.excerpt.slice(0, 60) + '...', bg: 'carousel-bg-2', btn: '阅读完整技术报告', link: `/article/${carouselPost.slug}` });
+    carouselItems.splice(2, 0, { tag: '技术前沿', title: carouselPost.title.slice(0, 20) + '...', desc: carouselPost.excerpt.slice(0, 60) + '...', bg: 'carousel-bg-2', btn: '阅读完整技术报告', link: `/article/${carouselPost.slug}` });
   }
 
   // Split posts for different sections
@@ -105,6 +117,57 @@ export default async function HomePage() {
     }
   } catch { /* defaults */ }
 
+  // Parse homepage section texts (CMS-managed)
+  let sectionsConfig: {
+    heroBadge: string;
+    heroSlogan: string;
+    heroSub: string;
+    heroCtaPrimary: string;
+    heroCtaSecondary: string;
+    reverseIcon: string;
+    reverseTitle: string;
+    reverseBadge: string;
+    reverseIntro: string;
+    scienceIcon: string;
+    scienceTitle: string;
+    scienceBadge: string;
+    scienceIntro: string;
+    communityBadge: string;
+    communityTitle: string;
+    communitySub: string;
+    industryIcon: string;
+    industryTitle: string;
+    industryBadge: string;
+    industryIntro: string;
+  } = {
+    heroBadge: '🥩 肉制品研发与智能中试平台',
+    heroSlogan: '赋能每一位肉品工艺工程师',
+    heroSub: '从深度技术长文到中试产线预约，从疑难问答到同行交流，全链路服务肉制品研发',
+    heroCtaPrimary: '💬 进入工艺问答讨论',
+    heroCtaSecondary: '🏭 预约中试线',
+    reverseIcon: '📌',
+    reverseTitle: '货架直通车间',
+    reverseBadge: '商超爆款逆向研发',
+    reverseIntro: '追踪山姆、盒马等零售终端销量走势，逆向拆解工业化量产工艺',
+    scienceIcon: '🔬',
+    scienceTitle: '硬核肉品科学',
+    scienceBadge: '工业配方重构与故障排查矩阵',
+    scienceIntro: '深入肉类生物化学底层，解决清洁标签、减盐减硝等现代改性需求',
+    communityBadge: '💬 工艺工程师讨论社区',
+    communityTitle: '有问题随时问，有经验随时分享',
+    communitySub: '出水、散肉、色泽不均、保质期不达标……遇到工艺难题，发帖求助同行专家。已有技术内容沉淀，持续更新中。',
+    industryIcon: '⚙️',
+    industryTitle: '工业4.0',
+    industryBadge: '设备选型与原辅料应用指南',
+    industryIntro: '拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"',
+  };
+  try {
+    if (sectionsSetting) {
+      const sc = JSON.parse(sectionsSetting.value);
+      sectionsConfig = { ...sectionsConfig, ...sc };
+    }
+  } catch { /* defaults */ }
+
   // Group pilot lines by region for multi-region display
   const regionOrder = ['华南', '华东', '华北', '华中', '西南', '东北', '其他'];
   const linesByRegion: Record<string, typeof pilotLines> = {};
@@ -124,44 +187,40 @@ export default async function HomePage() {
       <Header />
       <section className="hero" id="hero">
         <div className="container">
-          <div className="hero-grid">
-            {/* Left: slogan + CTA */}
-            <div className="hero-left">
-              <span className="hero-badge">🥩 肉制品研发与智能中试平台</span>
-              <h1 className="hero-slogan">赋能每一位肉品工艺工程师</h1>
-              <p className="hero-sub">从深度技术长文到中试产线预约，从疑难问答到同行交流，全链路服务肉制品研发</p>
+          <div className="hero-inner">
+            {/* Unified header: badge + slogan + CTA */}
+            <div className="hero-header">
+              <span className="hero-badge">{sectionsConfig.heroBadge}</span>
+              <h1 className="hero-slogan">{sectionsConfig.heroSlogan}</h1>
+              <p className="hero-sub">{sectionsConfig.heroSub}</p>
               <div className="hero-cta-row">
-                <Link href="/community" className="hero-cta hero-cta-primary">💬 进入工艺问答讨论</Link>
-                <Link href="/booking" className="hero-cta hero-cta-secondary">🏭 预约中试线</Link>
+                <Link href="/community" className="hero-cta hero-cta-primary">{sectionsConfig.heroCtaPrimary}</Link>
+                <Link href="/booking" className="hero-cta hero-cta-secondary">{sectionsConfig.heroCtaSecondary}</Link>
               </div>
             </div>
-            {/* Right: carousel + tools + discussion bar */}
-            <div className="hero-right">
-              <HomePageCarousel items={carouselItems} />
-              <div className="tool-box" id="tools">
-                <Link href="/tool/gb2760" className="tool-card">
-                  <div className="tool-icon" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📊</div>
-                  <div className="tool-info"><h4>GB 2760 添加剂限量计算器</h4><p>输入添加剂名称，一键合规审查</p></div>
-                  <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
-                </Link>
-                <Link href="/tool/troubleshoot" className="tool-card">
-                  <div className="tool-icon" style={{ background: '#FEE2E2', color: '#991B1B' }}>🚨</div>
-                  <div className="tool-info"><h4>肉制品车间故障智能排查矩阵</h4><p>解决出水、散肉、色泽不均等顽疾</p></div>
-                  <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
-                </Link>
-                <Link href="/tool/pilot-map" className="tool-card">
-                  <div className="tool-icon" style={{ background: '#D1FAE5', color: '#065F46' }}>🗺️</div>
-                  <div className="tool-info"><h4>全国肉类共享中试产线地图</h4><p>在线预约闲置产能，轻资产研发</p></div>
-                  <span style={{ marginLeft: 'auto', color: '#9CA3AF', fontSize: '1.2rem' }}>›</span>
-                </Link>
-              </div>
-              {/* Discussion bar - prominent entry to community */}
-              <Link href="/community" className="hero-discussion-bar">
-                <span className="pulse-dot"></span>
-                <span style={{ fontSize: '.88rem', fontWeight: 600 }}>🔥 工艺工程师在线讨论中</span>
-                <span style={{ fontSize: '.82rem', opacity: .75, marginLeft: 'auto' }}>立即参与 →</span>
+            {/* Full-width carousel */}
+            <HomePageCarousel items={carouselItems} />
+            {/* Tools row — 3 columns horizontal */}
+            <div className="hero-tools-row">
+              <Link href="/tool/gb2760" className="tool-card">
+                <div className="tool-icon" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📊</div>
+                <div className="tool-info"><h4>GB 2760 添加剂限量计算器</h4><p>输入添加剂名称，一键合规审查</p></div>
+              </Link>
+              <Link href="/tool/troubleshoot" className="tool-card">
+                <div className="tool-icon" style={{ background: '#FEE2E2', color: '#991B1B' }}>🚨</div>
+                <div className="tool-info"><h4>肉制品车间故障智能排查矩阵</h4><p>解决出水、散肉、色泽不均等顽疾</p></div>
+              </Link>
+              <Link href="/tool/pilot-map" className="tool-card">
+                <div className="tool-icon" style={{ background: '#D1FAE5', color: '#065F46' }}>🗺️</div>
+                <div className="tool-info"><h4>全国肉类共享中试产线地图</h4><p>在线预约闲置产能，轻资产研发</p></div>
               </Link>
             </div>
+            {/* Discussion bar - prominent entry to community */}
+            <Link href="/community" className="hero-discussion-bar">
+              <span className="pulse-dot"></span>
+              <span style={{ fontSize: '.88rem', fontWeight: 600 }}>🔥 工艺工程师在线讨论中</span>
+              <span style={{ fontSize: '.82rem', opacity: .75, marginLeft: 'auto' }}>立即参与 →</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -169,11 +228,11 @@ export default async function HomePage() {
       <section className="section-padding" id="reverse" style={{ background: '#fff' }}>
         <div className="container">
           <div className="section-header">
-            <span style={{ fontSize: '1.5rem' }}>📌</span>
-            <h2 className="section-title">货架直通车间</h2>
-            <span className="section-badge">商超爆款逆向研发</span>
+            <span style={{ fontSize: '1.5rem' }}>{sectionsConfig.reverseIcon}</span>
+            <h2 className="section-title">{sectionsConfig.reverseTitle}</h2>
+            <span className="section-badge">{sectionsConfig.reverseBadge}</span>
           </div>
-          <p className="section-intro">追踪山姆、盒马等零售终端销量走势，逆向拆解工业化量产工艺</p>
+          <p className="section-intro">{sectionsConfig.reverseIntro}</p>
           <div className="reverse-grid">
             {products.map((p, i) => (
               <Link key={p.id} href={`/product/${p.id}`} className="reverse-card">
@@ -198,11 +257,11 @@ export default async function HomePage() {
       <section className="section-padding" id="science" style={{ background: '#F3F4F6' }}>
         <div className="container">
           <div className="section-header">
-            <span style={{ fontSize: '1.5rem' }}>🔬</span>
-            <h2 className="section-title">硬核肉品科学</h2>
-            <span className="section-badge">工业配方重构与故障排查矩阵</span>
+            <span style={{ fontSize: '1.5rem' }}>{sectionsConfig.scienceIcon}</span>
+            <h2 className="section-title">{sectionsConfig.scienceTitle}</h2>
+            <span className="section-badge">{sectionsConfig.scienceBadge}</span>
           </div>
-          <p className="section-intro">深入肉类生物化学底层，解决清洁标签、减盐减硝等现代改性需求</p>
+          <p className="section-intro">{sectionsConfig.scienceIntro}</p>
           <div className="science-layout">
             <div className="category-tree">
               <h4 style={{ fontSize: '.9rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>📂 品类导航</h4>
@@ -318,9 +377,9 @@ export default async function HomePage() {
       <section className="section-padding" id="community" style={{ background: 'linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%)' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <span style={{ display: 'inline-block', padding: '4px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.15)', color: '#FCD34D', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }}>💬 工艺工程师讨论社区</span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>有问题随时问，有经验随时分享</h2>
-            <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', maxWidth: 700, margin: '0 auto' }}>出水、散肉、色泽不均、保质期不达标……遇到工艺难题，发帖求助同行专家。已有 {allPosts.length} 篇技术内容沉淀，持续更新中。</p>
+            <span style={{ display: 'inline-block', padding: '4px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.15)', color: '#FCD34D', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }}>{sectionsConfig.communityBadge}</span>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>{sectionsConfig.communityTitle}</h2>
+            <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', maxWidth: 700, margin: '0 auto' }}>{sectionsConfig.communitySub.replace(/已有.*持续更新中。/, `已有 ${allPosts.length} 篇技术内容沉淀，持续更新中。`)}</p>
           </div>
 
           {/* 快速提问入口 — 大号CTA */}
@@ -409,11 +468,11 @@ export default async function HomePage() {
       <section className="section-padding" id="industry" style={{ background: '#fff' }}>
         <div className="container">
           <div className="section-header">
-            <span style={{ fontSize: '1.5rem' }}>⚙️</span>
-            <h2 className="section-title">工业4.0</h2>
-            <span className="section-badge">设备选型与原辅料应用指南</span>
+            <span style={{ fontSize: '1.5rem' }}>{sectionsConfig.industryIcon}</span>
+            <h2 className="section-title">{sectionsConfig.industryTitle}</h2>
+            <span className="section-badge">{sectionsConfig.industryBadge}</span>
           </div>
-          <p className="section-intro">拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"</p>
+          <p className="section-intro">{sectionsConfig.industryIntro}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* CMS-managed articles */}
             {industryPosts.map((post) => (

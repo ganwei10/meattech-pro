@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const settings = await prisma.setting.findMany({
       where: {
-        key: { in: ['homepage_carousel', 'homepage_industry', 'homepage_footer', 'homepage_pilot'] },
+        key: { in: ['homepage_carousel', 'homepage_industry', 'homepage_footer', 'homepage_pilot', 'homepage_sections'] },
       },
     });
 
@@ -32,6 +32,7 @@ export async function GET() {
       industry: config.homepage_industry || [],
       footer: config.homepage_footer || { title: '', subtitle: '', groups: [] },
       pilot: config.homepage_pilot || null,
+      sections: config.homepage_sections || null,
     });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch homepage config', detail: String(error) }, { status: 500 });
@@ -47,7 +48,7 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const { carousel, industry, footer, pilot } = body;
+    const { carousel, industry, footer, pilot, sections } = body;
 
     const upsertSetting = async (key: string, value: string) => {
       const existing = await prisma.setting.findUnique({ where: { key } });
@@ -72,6 +73,10 @@ export async function PUT(request: Request) {
 
     if (pilot !== undefined) {
       await upsertSetting('homepage_pilot', JSON.stringify(pilot));
+    }
+
+    if (sections !== undefined) {
+      await upsertSetting('homepage_sections', JSON.stringify(sections));
     }
 
     return NextResponse.json({ ok: true });

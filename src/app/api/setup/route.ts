@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { getQAItems } from '@/lib/qaSeedData';
 
 export const dynamic = 'force-dynamic';
 
@@ -788,6 +789,22 @@ export async function GET() {
           { icon: '🧪', title: '调风味、做爆款逆向', desc: '撮合到辅料巨头演示中心，辅料带货换取产线开放', bg: 'linear-gradient(135deg, #FEF3C7 0%, #FFFBEB 100%)', borderColor: '#FDE68A', color: '#92400E' },
         ],
       }) },
+      { key: 'homepage_sections', value: JSON.stringify({
+        heroBadge: '🥩 肉制品研发与智能中试平台',
+        heroSlogan: '赋能每一位肉品工艺工程师',
+        heroSub: '从深度技术长文到中试产线预约，从疑难问答到同行交流，全链路服务肉制品研发',
+        heroCtaPrimary: '💬 进入工艺问答讨论',
+        heroCtaSecondary: '🏭 预约中试线',
+        reverseIcon: '📌', reverseTitle: '货架直通车间', reverseBadge: '商超爆款逆向研发',
+        reverseIntro: '追踪山姆、盒马等零售终端销量走势，逆向拆解工业化量产工艺',
+        scienceIcon: '🔬', scienceTitle: '硬核肉品科学', scienceBadge: '工业配方重构与故障排查矩阵',
+        scienceIntro: '深入肉类生物化学底层，解决清洁标签、减盐减硝等现代改性需求',
+        communityBadge: '💬 工艺工程师讨论社区',
+        communityTitle: '有问题随时问，有经验随时分享',
+        communitySub: '出水、散肉、色泽不均、保质期不达标……遇到工艺难题，发帖求助同行专家。已有技术内容沉淀，持续更新中。',
+        industryIcon: '⚙️', industryTitle: '工业4.0', industryBadge: '设备选型与原辅料应用指南',
+        industryIntro: '拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"',
+      }) },
     ];
     for (const s of homepageSettings) {
       await prisma.$executeRawUnsafe(
@@ -796,6 +813,57 @@ export async function GET() {
       );
     }
     logs.push('Homepage settings OK');
+
+    // 18. Seed 100 Q&A discussion posts
+    logs.push('Seeding 100 Q&A discussion posts...');
+    try {
+      const qaCategory = await prisma.category.findUnique({ where: { slug: 'community-qa' } });
+      if (qaCategory) {
+        const existingQA = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "Post" WHERE slug LIKE 'qa-%' LIMIT 1`;
+        if (existingQA.length === 0) {
+          const qaItems = getQAItems();
+          for (const item of qaItems) {
+            await prisma.$executeRawUnsafe(
+              `INSERT INTO "Post" (title, slug, excerpt, content, author, tags, status, "categoryId", "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 'PUBLISHED', $7, NOW() - INTERVAL '${Math.floor(Math.random() * 30)} days') ON CONFLICT (slug) DO NOTHING`,
+              item.title, item.slug, item.excerpt, item.content, item.author, item.tags, qaCategory.id
+            );
+          }
+          logs.push(`Seeded ${qaItems.length} Q&A posts`);
+        } else {
+          logs.push('Q&A posts already seeded');
+        }
+      } else {
+        logs.push('community-qa category not found, skip Q&A seeding');
+      }
+    } catch (e) {
+      logs.push(`Q&A seeding error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
+    // 19. Update carousel seed to include platform highlight slide
+    logs.push('Updating carousel with platform slide...');
+    try {
+      const existingCarousel = await prisma.setting.findUnique({ where: { key: 'homepage_carousel' } });
+      if (existingCarousel) {
+        const carouselData = JSON.parse(existingCarousel.value);
+        const hasPlatformSlide = carouselData.some((item: any) => item.tag === '平台介绍');
+        if (!hasPlatformSlide) {
+          carouselData.unshift({
+            tag: '平台介绍',
+            title: '肉制品研发与智能中试平台',
+            desc: '从深度技术长文到中试产线预约，从工艺问答到同行交流——全链路服务肉制品研发，赋能每一位肉品工艺工程师',
+            bg: 'carousel-bg-4',
+            btn: '了解平台全部功能',
+            link: '/tool/pilot-map',
+          });
+          await prisma.$executeRawUnsafe(`UPDATE "Setting" SET value = $1 WHERE key = 'homepage_carousel'`, JSON.stringify(carouselData));
+          logs.push('Carousel updated with platform slide');
+        } else {
+          logs.push('Carousel already has platform slide');
+        }
+      }
+    } catch (e) {
+      logs.push(`Carousel update skip: ${e instanceof Error ? e.message : String(e)}`);
+    }
 
     logs.push('=== Setup completed successfully ===');
     return NextResponse.json({ success: true, logs });
