@@ -11,8 +11,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAdmin, setIsAdmin] = useState(false);
   const [form, setForm] = useState({ email: 'admin@meattech.pro', password: 'admin123' });
   const [error, setError] = useState('');
+  const [expandedSection, setExpandedSection] = useState<string | null>('pilot');
+  const [pathname, setPathname] = useState('');
 
   useEffect(() => {
+    setPathname(window.location.pathname);
     fetch('/api/auth/me')
       .then(r => r.json())
       .then(d => {
@@ -26,6 +29,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       })
       .catch(() => setChecking(false));
   }, []);
+
+  // Auto-expand section based on current path
+  useEffect(() => {
+    if (!pathname) return;
+    if (pathname.startsWith('/admin/bookings') || pathname.startsWith('/admin/bills') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/reports') || pathname.startsWith('/admin/pilot-lines')) {
+      setExpandedSection('pilot');
+    } else if (pathname.startsWith('/admin/posts') || pathname.startsWith('/admin/categories')) {
+      setExpandedSection('content');
+    }
+  }, [pathname]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +59,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } else {
       setError('邮箱或密码错误');
     }
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const handleNavClick = (href: string) => {
+    setPathname(href);
   };
 
   if (checking) {
@@ -79,28 +100,106 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const navLinks = [
-    { href: '/admin', label: '📊 仪表盘' },
-    { href: '/admin/bookings', label: '📅 预约管理' },
-    { href: '/admin/bookings/calendar', label: '📆 预约日历' },
-    { href: '/admin/bills', label: '📄 账单管理' },
-    { href: '/admin/pilot-lines', label: '🏭 产线管理' },
-    { href: '/admin/customers', label: '👥 客户管理' },
-    { href: '/admin/reports', label: '📈 报表统计' },
-    { href: '/admin/posts', label: '📝 文章管理' },
-    { href: '/admin/categories', label: '📁 分类管理' },
-    { href: '/admin/settings', label: '⚙️ 系统设置' },
-  ];
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex' }}>
-      <aside style={{ width: 220, background: '#1E3A8A', color: '#fff', padding: '24px 16px', flexShrink: 0 }}>
+      <aside style={{ width: 240, background: '#1E3A8A', color: '#fff', padding: '24px 12px', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 32, padding: '0 8px' }}>🥩 MeatTech Admin</div>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {navLinks.map(link => (
-            <Link key={link.href} href={link.href} style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, textDecoration: 'none', display: 'block' }}>{link.label}</Link>
-          ))}
-          <Link href="/" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, marginTop: 16, textDecoration: 'none', display: 'block' }}>🌐 返回前台</Link>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, overflowY: 'auto' }}>
+          {/* 仪表盘 */}
+          <Link href="/admin" onClick={() => setPathname('/admin')} style={{
+            padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff',
+            background: pathname === '/admin' ? 'rgba(255,255,255,0.15)' : 'transparent',
+            textDecoration: 'none', display: 'block'
+          }}>📊 仪表盘</Link>
+
+          {/* 中试管理 - 可折叠 */}
+          <div>
+            <div
+              onClick={() => toggleSection('pilot')}
+              style={{
+                padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                fontWeight: 600,
+              }}
+            >
+              <span>🏭 中试管理</span>
+              <span style={{ fontSize: '.7rem', opacity: 0.7 }}>{expandedSection === 'pilot' ? '▼' : '▶'}</span>
+            </div>
+            {expandedSection === 'pilot' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2, marginLeft: 12, borderLeft: '2px solid rgba(255,255,255,0.15)', paddingLeft: 8 }}>
+                <Link href="/admin/pilot-lines" onClick={() => setPathname('/admin/pilot-lines')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/pilot-lines') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>🏭 中试产线</Link>
+                <Link href="/admin/bookings" onClick={() => setPathname('/admin/bookings')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/bookings') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📅 预约管理</Link>
+                <Link href="/admin/bookings/calendar" onClick={() => setPathname('/admin/bookings/calendar')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/bookings/calendar') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📆 预约日历</Link>
+                <Link href="/admin/bills" onClick={() => setPathname('/admin/bills')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/bills') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📄 账单管理</Link>
+                <Link href="/admin/customers" onClick={() => setPathname('/admin/customers')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/customers') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>👥 客户管理</Link>
+                <Link href="/admin/reports" onClick={() => setPathname('/admin/reports')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/reports') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📈 报表统计</Link>
+              </div>
+            )}
+          </div>
+
+          {/* 内容管理 - 可折叠 */}
+          <div>
+            <div
+              onClick={() => toggleSection('content')}
+              style={{
+                padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                fontWeight: 600, marginTop: 4,
+              }}
+            >
+              <span>📝 内容管理</span>
+              <span style={{ fontSize: '.7rem', opacity: 0.7 }}>{expandedSection === 'content' ? '▼' : '▶'}</span>
+            </div>
+            {expandedSection === 'content' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2, marginLeft: 12, borderLeft: '2px solid rgba(255,255,255,0.15)', paddingLeft: 8 }}>
+                <Link href="/admin/posts" onClick={() => setPathname('/admin/posts')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/posts') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📝 文章管理</Link>
+                <Link href="/admin/categories" onClick={() => setPathname('/admin/categories')} style={{
+                  padding: '8px 12px', borderRadius: 6, fontSize: '.85rem', color: '#fff', opacity: .88,
+                  background: isActive('/admin/categories') ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  textDecoration: 'none', display: 'block'
+                }}>📁 分类管理</Link>
+              </div>
+            )}
+          </div>
+
+          {/* 系统设置 */}
+          <Link href="/admin/settings" onClick={() => setPathname('/admin/settings')} style={{
+            padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88,
+            background: isActive('/admin/settings') ? 'rgba(255,255,255,0.15)' : 'transparent',
+            textDecoration: 'none', display: 'block', marginTop: 4,
+          }}>⚙️ 系统设置</Link>
+
+          <Link href="/" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, marginTop: 'auto', textDecoration: 'none', display: 'block' }}>🌐 返回前台</Link>
         </nav>
       </aside>
       <main style={{ flex: 1, padding: 32, background: '#F3F4F6', overflowY: 'auto' }}>

@@ -88,7 +88,7 @@ export default function BillsAdminPage() {
       '电话': b.customerPhone,
       '邮箱': b.customerEmail,
       '公司': b.company,
-      '产线': b.line.name,
+      '中试产线': b.line.name,
       '金额': b.amount,
       '服务费': b.serviceFee,
       '总计': b.totalAmount,
@@ -174,7 +174,7 @@ export default function BillsAdminPage() {
                 <th style={{ padding: 12, textAlign: 'left' }}>账单编号</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>客户</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>公司</th>
-                <th style={{ padding: 12, textAlign: 'left' }}>产线</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>中试产线</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>金额</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>服务费</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>总计</th>
@@ -237,7 +237,7 @@ export default function BillsAdminPage() {
               <div style={{ background: '#F9FAFB', padding: 16, borderRadius: 8, marginBottom: 12 }}>
                 <div style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: 8 }}>费用明细</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span>产线使用费用</span>
+                  <span>中试产线使用费用</span>
                   <span>¥{showDetail.amount.toFixed(2)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>

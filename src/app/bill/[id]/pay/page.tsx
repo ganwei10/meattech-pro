@@ -106,7 +106,7 @@ export default function PayPage({ params }: { params: { id: string } }) {
             <div style={{ fontWeight: 600 }}>#{bill.id}</div>
           </div>
           <div>
-            <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>产线</div>
+            <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>中试产线</div>
             <div style={{ fontWeight: 500 }}>{bill.line?.name || '-'}</div>
           </div>
           <div>
@@ -121,7 +121,7 @@ export default function PayPage({ params }: { params: { id: string } }) {
 
         <div style={{ background: '#F9FAFB', padding: 16, borderRadius: 8, marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span>产线使用费用</span>
+            <span>中试产线使用费用</span>
             <span>¥{bill.amount?.toFixed(2) || '0.00'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>

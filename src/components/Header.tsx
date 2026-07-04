@@ -64,9 +64,9 @@ export default function Header() {
           {!loading && (
             user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: '.88rem', color: '#374151', fontWeight: 500 }}>
+                <Link href="/dashboard" style={{ fontSize: '.88rem', color: '#1E3A8A', fontWeight: 500, textDecoration: 'none' }}>
                   👤 {user.name || user.email}
-                </span>
+                </Link>
                 <button onClick={handleLogout} style={{ background: 'none', border: '1px solid #E5E7EB', padding: '6px 14px', borderRadius: 8, fontSize: '.82rem', cursor: 'pointer', color: '#6B7280' }}>
                   退出
                 </button>

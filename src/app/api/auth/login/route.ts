@@ -18,12 +18,13 @@ export async function POST(request: Request) {
     email: user.email,
     name: user.name,
     role: user.role,
+    phone: user.phone || '',
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
     .sign(secret);
 
-  const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+  const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name, role: user.role, phone: user.phone || '' } });
   res.cookies.set('meattech_token', token, {
     httpOnly: true,
     sameSite: 'lax',

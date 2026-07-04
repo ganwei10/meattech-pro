@@ -48,7 +48,7 @@ export default function BookingForm({ lines }: { lines: { id: number; name: stri
       <div>
         <label style={labelStyle}>选择中试产线 *</label>
         <select required value={form.lineId} onChange={e => setForm({ ...form, lineId: e.target.value })} style={inputStyle}>
-          <option value="">请选择产线...</option>
+          <option value="">请选择中试产线...</option>
           {lines.map(l => (
             <option key={l.id} value={l.id} disabled={l.status !== 'AVAILABLE'}>
               {l.region} · {l.name} {l.status === 'AVAILABLE' ? '（有档期）' : '（需预约）'}

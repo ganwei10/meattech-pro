@@ -52,7 +52,7 @@ export default function AdminBookings() {
     setLoading(true);
     setError('');
     try {
-      // 加载产线
+      // 加载中试产线
       const linesRes = await fetch('/api/pilot-lines');
       if (linesRes.ok) {
         const linesData = await linesRes.json();
@@ -142,7 +142,7 @@ export default function AdminBookings() {
       '电话': b.contactPhone,
       '邮箱': b.contactEmail,
       '单位': b.company,
-      '产线': b.line.name,
+      '中试产线': b.line.name,
       '状态': statusMap[b.status]?.label || b.status,
       '期望日期': b.preferredDate,
       '创建时间': new Date(b.createdAt).toLocaleString('zh-CN'),
@@ -253,13 +253,13 @@ export default function AdminBookings() {
             </select>
           </div>
           <div>
-            <div style={{ fontSize: '.78rem', color: '#6B7280', marginBottom: 4 }}>产线</div>
+            <div style={{ fontSize: '.78rem', color: '#6B7280', marginBottom: 4 }}>中试产线</div>
             <select
               value={filters.lineId}
               onChange={e => setFilters({ ...filters, lineId: e.target.value, page: 1 })}
               style={{ width: '100%', padding: '8px 12px', border: '1px solid #D1D5DB', borderRadius: 8, fontSize: '.85rem', boxSizing: 'border-box' }}
             >
-              <option value="">全部产线</option>
+              <option value="">全部中试产线</option>
               {pilotLines.map(pl => (
                 <option key={pl.id} value={pl.id}>{pl.name}</option>
               ))}
@@ -302,7 +302,7 @@ export default function AdminBookings() {
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>编号</th>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>联系人</th>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>单位</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>产线</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>中试产线</th>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>状态</th>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>日期</th>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '.85rem', fontWeight: 600, color: '#6B7280' }}>操作</th>
@@ -377,7 +377,7 @@ export default function AdminBookings() {
                 <div style={{ fontWeight: 600 }}>{selectedBooking.company}</div>
               </div>
               <div>
-                <div style={{ fontSize: '.78rem', color: '#6B7280', marginBottom: 4 }}>预约产线</div>
+                <div style={{ fontSize: '.78rem', color: '#6B7280', marginBottom: 4 }}>预约中试产线</div>
                 <div style={{ fontWeight: 600 }}>{selectedBooking.line.name}</div>
                 <div style={{ fontSize: '.75rem', color: '#9CA3AF' }}>{selectedBooking.line.region} | {selectedBooking.line.capacity}</div>
               </div>

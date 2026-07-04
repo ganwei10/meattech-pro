@@ -83,7 +83,7 @@ export default function PilotLinesAdminPage() {
 
     const data = await res.json();
     if (data.success) {
-      setMessage(`✅ 产线已${editingLine ? '更新' : '创建'}`);
+      setMessage(`✅ 中试产线已${editingLine ? '更新' : '创建'}`);
       setShowModal(false);
       setEditingLine(null);
       resetForm();
@@ -115,12 +115,12 @@ export default function PilotLinesAdminPage() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`确定要删除产线「${name}」吗？`)) return;
+    if (!confirm(`确定要删除中试产线「${name}」吗？`)) return;
 
     const res = await fetch(`/api/admin/pilot-lines/${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
-      setMessage('✅ 产线已删除');
+      setMessage('✅ 中试产线已删除');
       loadLines();
     } else {
       setMessage(`❌ ${data.error || '删除失败'}`);
@@ -158,7 +158,7 @@ export default function PilotLinesAdminPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 24 }}>🏭 产线管理</h1>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 24 }}>🏭 中试产线管理</h1>
 
       {message && (
         <div style={{ padding: '12px 16px', borderRadius: 8, marginBottom: 16, background: message.includes('✅') ? '#ECFDF5' : '#FEE2E2', color: message.includes('✅') ? '#059669' : '#DC2626' }}>
@@ -175,24 +175,24 @@ export default function PilotLinesAdminPage() {
           <option value="MAINTENANCE">维护中</option>
         </select>
         <input
-          placeholder="搜索产线名称..."
+          placeholder="搜索中试产线名称..."
           value={filter.keyword}
           onChange={e => setFilter({ ...filter, keyword: e.target.value })}
           style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #D1D5DB', flex: 1, minWidth: 200 }}
         />
         <button onClick={() => { resetForm(); setEditingLine(null); setShowModal(true); }} style={{ padding: '8px 16px', background: '#1E3A8A', color: '#FFF', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
-          ＋ 新增产线
+           ＋ 新增中试产线
         </button>
       </div>
 
-      {/* 产线列表 */}
+      {/* 中试产线列表 */}
       {loading ? <div>加载中...</div> : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
                 <th style={{ padding: 12, textAlign: 'left' }}>ID</th>
-                <th style={{ padding: 12, textAlign: 'left' }}>产线名称</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>中试产线名称</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>地区</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>状态</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>收费标准</th>
@@ -226,11 +226,11 @@ export default function PilotLinesAdminPage() {
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: '#FFF', borderRadius: 12, padding: 24, maxWidth: 600, width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 16 }}>{editingLine ? '编辑产线' : '新增产线'}</h2>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 16 }}>{editingLine ? '编辑中试产线' : '新增中试产线'}</h2>
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: 4, fontSize: '.9rem', fontWeight: 500 }}>产线名称 *</label>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: '.9rem', fontWeight: 500 }}>中试产线名称 *</label>
                   <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #D1D5DB', boxSizing: 'border-box' }} />
                 </div>
                 <div>

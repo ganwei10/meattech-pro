@@ -10,6 +10,7 @@ export type CurrentUser = {
   email: string;
   name: string;
   role: string;
+  phone?: string;
 } | null;
 
 export async function getCurrentUser(): Promise<CurrentUser> {
@@ -23,6 +24,7 @@ export async function getCurrentUser(): Promise<CurrentUser> {
       email: payload.email as string,
       name: payload.name as string,
       role: payload.role as string,
+      phone: (payload.phone as string) || '',
     };
   } catch {
     return null;
