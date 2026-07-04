@@ -426,6 +426,13 @@ export default function AdminBookings() {
               <button onClick={() => setSelectedBooking(null)} style={{ background: '#9CA3AF', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontSize: '.9rem', cursor: 'pointer' }}>
                 关闭
               </button>
+              <a
+                href={`/admin/documents/contract/${selectedBooking.id}`}
+                target="_blank"
+                style={{ padding: '10px 20px', background: '#F59E0B', color: '#fff', border: 'none', borderRadius: 8, fontSize: '.9rem', fontWeight: 600, textDecoration: 'none', display: 'inline-block' }}
+              >
+                📄 生成合同
+              </a>
             </div>
 
             <div style={{ marginTop: 16, fontSize: '.78rem', color: '#9CA3AF' }}>
