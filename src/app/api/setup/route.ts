@@ -823,8 +823,9 @@ export async function GET() {
         if (existingQA.length === 0) {
           const qaItems = getQAItems();
           for (const item of qaItems) {
+            const daysAgo = Math.floor(Math.random() * 30);
             await prisma.$executeRawUnsafe(
-              `INSERT INTO "Post" (title, slug, excerpt, content, author, tags, status, "categoryId", "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 'PUBLISHED', $7, NOW() - INTERVAL '${Math.floor(Math.random() * 30)} days') ON CONFLICT (slug) DO NOTHING`,
+              `INSERT INTO "Post" (title, slug, excerpt, content, author, tags, status, "categoryId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, 'PUBLISHED', $7, NOW() - INTERVAL '${daysAgo} days', NOW() - INTERVAL '${daysAgo} days') ON CONFLICT (slug) DO NOTHING`,
               item.title, item.slug, item.excerpt, item.content, item.author, item.tags, qaCategory.id
             );
           }
