@@ -52,11 +52,48 @@ interface ReverseItem {
   title: string; category: string; difficulty: string; link: string; icon: string; tags?: string;
 }
 
+interface GlobalConfig {
+  header: {
+    logoText: string;
+    navItems: { label: string; href: string }[];
+    searchPlaceholder: string;
+    searchBtnText: string;
+    askBtnText: string;
+    bookBtnText: string;
+  };
+  footer: {
+    disclaimerTitle: string;
+    disclaimerText: string;
+    cooperationTitle: string;
+    cooperationText: string;
+    cooperationBtnText: string;
+    copyrightText: string;
+  };
+  tools: {
+    gb2760: { title: string; subtitle: string; disclaimer: string };
+    troubleshoot: { title: string; subtitle: string };
+    pilotMap: { title: string; subtitle: string; mapIntro: string };
+  };
+  booking: { title: string; subtitle: string };
+  community: { headerBadge: string; headerTitle: string; headerDesc: string; askBtnText: string };
+  homepage: {
+    toolCards: { icon: string; bg: string; color: string; title: string; desc: string; link: string }[];
+    discussionBarText: string;
+    discussionBarCta: string;
+    communityCards: { icon: string; title: string; desc: string; tags: string[]; link: string; highlight?: boolean }[];
+    pilotDemo: { title: string; liveLabel: string; liveLocation: string; chatText: string };
+    pilotCardTitle: string;
+    pilotCardSubtitle: string;
+    pilotBtnText: string;
+  };
+}
+
 export default function HomepageAdminPage() {
-  const [activeTab, setActiveTab] = useState<'carousel' | 'industry' | 'pilot' | 'footer' | 'sections' | 'reverse'>('carousel');
+  const [activeTab, setActiveTab] = useState<'carousel' | 'industry' | 'pilot' | 'footer' | 'sections' | 'reverse' | 'global'>('carousel');
   const [carousel, setCarousel] = useState<CarouselItem[]>([]);
   const [industry, setIndustry] = useState<IndustryItem[]>([]);
   const [reverse, setReverse] = useState<ReverseItem[]>([]);
+  const [globalCfg, setGlobalCfg] = useState<GlobalConfig | null>(null);
   const [footer, setFooter] = useState<FooterConfig>({ title: '', subtitle: '', groups: [] });
   const [sections, setSections] = useState<SectionsConfig>({
     heroBadge: '🥩 肉制品研发与智能中试平台',
@@ -107,6 +144,7 @@ export default function HomepageAdminPage() {
       setFooter(data.footer || { title: '', subtitle: '', groups: [] });
       if (data.pilot) setPilot(data.pilot);
       if (data.sections) setSections(data.sections);
+      if (data.global) setGlobalCfg(data.global);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
@@ -165,6 +203,15 @@ export default function HomepageAdminPage() {
     setSaving(false);
   };
 
+  const saveGlobal = async () => {
+    setSaving(true); setMessage('');
+    try {
+      const res = await fetch('/api/admin/homepage', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ global: globalCfg }) });
+      if (res.ok) setMessage('✅ 全站配置已保存'); else setMessage('❌ 保存失败');
+    } catch { setMessage('❌ 保存失败'); }
+    setSaving(false);
+  };
+
   const bgOptions = ['carousel-bg-1', 'carousel-bg-2', 'carousel-bg-3', 'carousel-bg-4'];
   const iconOptions = ['🔬', '⚙️', '📦', '🏭', '🧪', '📊', '🥩', '🍳', '🌶️', '❄️', '🎓', '🗺️'];
   const modelIconOptions = ['🎓', '🏭', '🧪', '🔬', '⚙️', '📦', '📊', '🥩', '🍳', '🌶️', '❄️', '🗺️'];
@@ -196,6 +243,7 @@ export default function HomepageAdminPage() {
         <button onClick={() => setActiveTab('pilot')} style={tabBtnStyle(activeTab === 'pilot')}>🏭 中试中心</button>
         <button onClick={() => setActiveTab('industry')} style={tabBtnStyle(activeTab === 'industry')}>⚙️ 工业4.0栏目</button>
         <button onClick={() => setActiveTab('footer')} style={tabBtnStyle(activeTab === 'footer')}>📱 社群管理</button>
+        <button onClick={() => setActiveTab('global')} style={tabBtnStyle(activeTab === 'global')}>🌐 全站配置</button>
       </div>
 
       {/* 首页文案管理 */}
@@ -571,6 +619,165 @@ export default function HomepageAdminPage() {
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={() => setFooter({ ...footer, groups: [...footer.groups, { icon: '🍖', name: '新交流群', qrcode: '' }] })} style={btnAddStyle}>＋ 添加社群</button>
             <button onClick={saveFooter} disabled={saving} style={btnSaveStyle}>{saving ? '保存中...' : '💾 保存社群配置'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* 全站配置管理 */}
+      {activeTab === 'global' && globalCfg && (
+        <div>
+          {/* Header 配置 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🖥️ 顶部导航栏（Header）</h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>Logo 文字</label>
+              <input type="text" value={globalCfg.header.logoText} onChange={e => setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, logoText: e.target.value } })} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>搜索框占位文字</label>
+              <input type="text" value={globalCfg.header.searchPlaceholder} onChange={e => setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, searchPlaceholder: e.target.value } })} style={inputStyle} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div><label style={labelStyle}>搜索按钮文字</label><input type="text" value={globalCfg.header.searchBtnText} onChange={e => setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, searchBtnText: e.target.value } })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>提问按钮文字</label><input type="text" value={globalCfg.header.askBtnText} onChange={e => setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, askBtnText: e.target.value } })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>预约按钮文字</label><input type="text" value={globalCfg.header.bookBtnText} onChange={e => setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, bookBtnText: e.target.value } })} style={inputStyle} /></div>
+            </div>
+            <label style={labelStyle}>导航菜单项（可增删改）</label>
+            {globalCfg.header.navItems.map((item, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8, marginBottom: 8 }}>
+                <input type="text" value={item.label} onChange={e => { const arr = [...globalCfg.header.navItems]; arr[i] = { ...item, label: e.target.value }; setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, navItems: arr } }); }} placeholder="显示文字" style={inputStyle} />
+                <input type="text" value={item.href} onChange={e => { const arr = [...globalCfg.header.navItems]; arr[i] = { ...item, href: e.target.value }; setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, navItems: arr } }); }} placeholder="链接地址" style={inputStyle} />
+                <button onClick={() => setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, navItems: globalCfg.header.navItems.filter((_, j) => j !== i) } })} style={btnDelStyle}>删</button>
+              </div>
+            ))}
+            <button onClick={() => setGlobalCfg({ ...globalCfg, header: { ...globalCfg.header, navItems: [...globalCfg.header.navItems, { label: '新菜单项', href: '/' }] } })} style={btnAddStyle}>＋ 添加导航项</button>
+          </div>
+
+          {/* Footer 配置 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>📄 页脚内容（Footer）</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div><label style={labelStyle}>免责声明标题</label><input type="text" value={globalCfg.footer.disclaimerTitle} onChange={e => setGlobalCfg({ ...globalCfg, footer: { ...globalCfg.footer, disclaimerTitle: e.target.value } })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>合作入驻标题</label><input type="text" value={globalCfg.footer.cooperationTitle} onChange={e => setGlobalCfg({ ...globalCfg, footer: { ...globalCfg.footer, cooperationTitle: e.target.value } })} style={inputStyle} /></div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>免责声明内容</label>
+              <textarea value={globalCfg.footer.disclaimerText} onChange={e => setGlobalCfg({ ...globalCfg, footer: { ...globalCfg.footer, disclaimerText: e.target.value } })} rows={3} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>合作入驻内容</label>
+              <textarea value={globalCfg.footer.cooperationText} onChange={e => setGlobalCfg({ ...globalCfg, footer: { ...globalCfg.footer, cooperationText: e.target.value } })} rows={3} style={inputStyle} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div><label style={labelStyle}>合作入驻按钮文字</label><input type="text" value={globalCfg.footer.cooperationBtnText} onChange={e => setGlobalCfg({ ...globalCfg, footer: { ...globalCfg.footer, cooperationBtnText: e.target.value } })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>版权文字</label><input type="text" value={globalCfg.footer.copyrightText} onChange={e => setGlobalCfg({ ...globalCfg, footer: { ...globalCfg.footer, copyrightText: e.target.value } })} style={inputStyle} /></div>
+            </div>
+          </div>
+
+          {/* 工具页配置 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🛠️ 工具页面标题配置</h3>
+            <div style={{ marginBottom: 12, padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+              <strong style={{ fontSize: '.85rem' }}>GB 2760 计算器页</strong>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>页面标题</label><input type="text" value={globalCfg.tools.gb2760.title} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, gb2760: { ...globalCfg.tools.gb2760, title: e.target.value } } })} style={inputStyle} /></div>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>页面副标题</label><input type="text" value={globalCfg.tools.gb2760.subtitle} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, gb2760: { ...globalCfg.tools.gb2760, subtitle: e.target.value } } })} style={inputStyle} /></div>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>免责声明</label><textarea value={globalCfg.tools.gb2760.disclaimer} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, gb2760: { ...globalCfg.tools.gb2760, disclaimer: e.target.value } } })} rows={2} style={inputStyle} /></div>
+            </div>
+            <div style={{ marginBottom: 12, padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+              <strong style={{ fontSize: '.85rem' }}>故障排查矩阵页</strong>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>页面标题</label><input type="text" value={globalCfg.tools.troubleshoot.title} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, troubleshoot: { ...globalCfg.tools.troubleshoot, title: e.target.value } } })} style={inputStyle} /></div>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>页面副标题</label><input type="text" value={globalCfg.tools.troubleshoot.subtitle} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, troubleshoot: { ...globalCfg.tools.troubleshoot, subtitle: e.target.value } } })} style={inputStyle} /></div>
+            </div>
+            <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+              <strong style={{ fontSize: '.85rem' }}>中试产线地图页</strong>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>页面标题</label><input type="text" value={globalCfg.tools.pilotMap.title} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, pilotMap: { ...globalCfg.tools.pilotMap, title: e.target.value } } })} style={inputStyle} /></div>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>页面副标题</label><input type="text" value={globalCfg.tools.pilotMap.subtitle} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, pilotMap: { ...globalCfg.tools.pilotMap, subtitle: e.target.value } } })} style={inputStyle} /></div>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>地图介绍文字</label><textarea value={globalCfg.tools.pilotMap.mapIntro} onChange={e => setGlobalCfg({ ...globalCfg, tools: { ...globalCfg.tools, pilotMap: { ...globalCfg.tools.pilotMap, mapIntro: e.target.value } } })} rows={2} style={inputStyle} /></div>
+            </div>
+          </div>
+
+          {/* 预约页 + 社区页 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>📅 预约页 & 社区页标题</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
+              <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                <strong style={{ fontSize: '.85rem' }}>预约页</strong>
+                <div style={{ marginTop: 8 }}><label style={labelStyle}>标题</label><input type="text" value={globalCfg.booking.title} onChange={e => setGlobalCfg({ ...globalCfg, booking: { ...globalCfg.booking, title: e.target.value } })} style={inputStyle} /></div>
+                <div style={{ marginTop: 8 }}><label style={labelStyle}>副标题</label><input type="text" value={globalCfg.booking.subtitle} onChange={e => setGlobalCfg({ ...globalCfg, booking: { ...globalCfg.booking, subtitle: e.target.value } })} style={inputStyle} /></div>
+              </div>
+              <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                <strong style={{ fontSize: '.85rem' }}>社区页</strong>
+                <div style={{ marginTop: 8 }}><label style={labelStyle}>徽章标签</label><input type="text" value={globalCfg.community.headerBadge} onChange={e => setGlobalCfg({ ...globalCfg, community: { ...globalCfg.community, headerBadge: e.target.value } })} style={inputStyle} /></div>
+                <div style={{ marginTop: 8 }}><label style={labelStyle}>页面标题</label><input type="text" value={globalCfg.community.headerTitle} onChange={e => setGlobalCfg({ ...globalCfg, community: { ...globalCfg.community, headerTitle: e.target.value } })} style={inputStyle} /></div>
+                <div style={{ marginTop: 8 }}><label style={labelStyle}>页面描述</label><textarea value={globalCfg.community.headerDesc} onChange={e => setGlobalCfg({ ...globalCfg, community: { ...globalCfg.community, headerDesc: e.target.value } })} rows={2} style={inputStyle} /></div>
+                <div style={{ marginTop: 8 }}><label style={labelStyle}>提问按钮文字</label><input type="text" value={globalCfg.community.askBtnText} onChange={e => setGlobalCfg({ ...globalCfg, community: { ...globalCfg.community, askBtnText: e.target.value } })} style={inputStyle} /></div>
+              </div>
+            </div>
+          </div>
+
+          {/* 首页工具卡片 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🔧 首页工具卡片配置</h3>
+            {globalCfg.homepage.toolCards.map((card, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr auto', gap: 8, marginBottom: 8, padding: 8, background: '#F9FAFB', borderRadius: 8 }}>
+                <input type="text" value={card.icon} onChange={e => { const arr = [...globalCfg.homepage.toolCards]; arr[i] = { ...card, icon: e.target.value }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, toolCards: arr } }); }} placeholder="图标" style={{ ...inputStyle, textAlign: 'center' }} />
+                <input type="text" value={card.title} onChange={e => { const arr = [...globalCfg.homepage.toolCards]; arr[i] = { ...card, title: e.target.value }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, toolCards: arr } }); }} placeholder="标题" style={inputStyle} />
+                <input type="text" value={card.desc} onChange={e => { const arr = [...globalCfg.homepage.toolCards]; arr[i] = { ...card, desc: e.target.value }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, toolCards: arr } }); }} placeholder="描述" style={inputStyle} />
+                <button onClick={() => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, toolCards: globalCfg.homepage.toolCards.filter((_, j) => j !== i) } })} style={btnDelStyle}>删</button>
+              </div>
+            ))}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+              <div><label style={labelStyle}>讨论条文字</label><input type="text" value={globalCfg.homepage.discussionBarText} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, discussionBarText: e.target.value } })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>讨论条按钮</label><input type="text" value={globalCfg.homepage.discussionBarCta} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, discussionBarCta: e.target.value } })} style={inputStyle} /></div>
+            </div>
+          </div>
+
+          {/* 中试板块配置 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🏭 中试板块配置</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div><label style={labelStyle}>中试卡片标题</label><input type="text" value={globalCfg.homepage.pilotCardTitle} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, pilotCardTitle: e.target.value } })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>中试卡片副标题</label><input type="text" value={globalCfg.homepage.pilotCardSubtitle} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, pilotCardSubtitle: e.target.value } })} style={inputStyle} /></div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>中试CTA按钮文字</label>
+              <input type="text" value={globalCfg.homepage.pilotBtnText} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, pilotBtnText: e.target.value } })} style={inputStyle} />
+            </div>
+            <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+              <strong style={{ fontSize: '.85rem' }}>远程协同研发舱演示内容</strong>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>舱标题</label><input type="text" value={globalCfg.homepage.pilotDemo.title} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, pilotDemo: { ...globalCfg.homepage.pilotDemo, title: e.target.value } } })} style={inputStyle} /></div>
+              <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div><label style={labelStyle}>实验标签</label><input type="text" value={globalCfg.homepage.pilotDemo.liveLabel} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, pilotDemo: { ...globalCfg.homepage.pilotDemo, liveLabel: e.target.value } } })} style={inputStyle} /></div>
+                <div><label style={labelStyle}>位置标签</label><input type="text" value={globalCfg.homepage.pilotDemo.liveLocation} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, pilotDemo: { ...globalCfg.homepage.pilotDemo, liveLocation: e.target.value } } })} style={inputStyle} /></div>
+              </div>
+              <div style={{ marginTop: 8 }}><label style={labelStyle}>聊天文字</label><textarea value={globalCfg.homepage.pilotDemo.chatText} onChange={e => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, pilotDemo: { ...globalCfg.homepage.pilotDemo, chatText: e.target.value } } })} rows={2} style={inputStyle} /></div>
+            </div>
+          </div>
+
+          {/* 首页社区卡片 */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>💬 首页社区板块卡片</h3>
+            {globalCfg.homepage.communityCards.map((card, i) => (
+              <div key={i} style={{ marginBottom: 12, padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr auto', gap: 8 }}>
+                  <input type="text" value={card.icon} onChange={e => { const arr = [...globalCfg.homepage.communityCards]; arr[i] = { ...card, icon: e.target.value }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, communityCards: arr } }); }} placeholder="图标" style={{ ...inputStyle, textAlign: 'center' }} />
+                  <input type="text" value={card.title} onChange={e => { const arr = [...globalCfg.homepage.communityCards]; arr[i] = { ...card, title: e.target.value }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, communityCards: arr } }); }} placeholder="标题" style={inputStyle} />
+                  <input type="text" value={card.link} onChange={e => { const arr = [...globalCfg.homepage.communityCards]; arr[i] = { ...card, link: e.target.value }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, communityCards: arr } }); }} placeholder="链接" style={inputStyle} />
+                  <button onClick={() => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, communityCards: globalCfg.homepage.communityCards.filter((_, j) => j !== i) } })} style={btnDelStyle}>删</button>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <textarea value={card.desc} onChange={e => { const arr = [...globalCfg.homepage.communityCards]; arr[i] = { ...card, desc: e.target.value }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, communityCards: arr } }); }} placeholder="描述" rows={2} style={inputStyle} />
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <input type="text" value={card.tags.join(', ')} onChange={e => { const arr = [...globalCfg.homepage.communityCards]; arr[i] = { ...card, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) }; setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, communityCards: arr } }); }} placeholder="标签（逗号分隔，留空则显示文章数和品类数）" style={inputStyle} />
+                </div>
+              </div>
+            ))}
+            <button onClick={() => setGlobalCfg({ ...globalCfg, homepage: { ...globalCfg.homepage, communityCards: [...globalCfg.homepage.communityCards, { icon: '🆕', title: '新卡片', desc: '描述内容', tags: [], link: '/' }] } })} style={btnAddStyle}>＋ 添加社区卡片</button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+            <button onClick={saveGlobal} disabled={saving} style={btnSaveStyle}>{saving ? '保存中...' : '💾 保存全站配置'}</button>
           </div>
         </div>
       )}

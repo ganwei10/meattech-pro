@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const settings = await prisma.setting.findMany({
       where: {
-        key: { in: ['homepage_carousel', 'homepage_industry', 'homepage_footer', 'homepage_pilot', 'homepage_sections', 'homepage_reverse'] },
+        key: { in: ['homepage_carousel', 'homepage_industry', 'homepage_footer', 'homepage_pilot', 'homepage_sections', 'homepage_reverse', 'site_global'] },
       },
     });
 
@@ -34,6 +34,7 @@ export async function GET() {
       pilot: config.homepage_pilot || null,
       sections: config.homepage_sections || null,
       reverse: config.homepage_reverse || [],
+      global: config.site_global || null,
     });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch homepage config', detail: String(error) }, { status: 500 });
@@ -49,7 +50,7 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const { carousel, industry, footer, pilot, sections, reverse } = body;
+    const { carousel, industry, footer, pilot, sections, reverse, global: globalConfig } = body;
 
     const upsertSetting = async (key: string, value: string) => {
       const existing = await prisma.setting.findUnique({ where: { key } });
@@ -82,6 +83,10 @@ export async function PUT(request: Request) {
 
     if (reverse !== undefined) {
       await upsertSetting('homepage_reverse', JSON.stringify(reverse));
+    }
+
+    if (globalConfig !== undefined) {
+      await upsertSetting('site_global', JSON.stringify(globalConfig));
     }
 
     return NextResponse.json({ ok: true });

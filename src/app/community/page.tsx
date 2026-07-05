@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,10 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
   posts.forEach(p => p.tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => tagSet.add(t)));
   const allTags: string[] = Array.from(tagSet).slice(0, 20);
 
+  // Fetch global config for community page text
+  const globalConfig = await getSiteGlobalConfig();
+  const cc = globalConfig.community;
+
   // Build FAQ Schema for AEO (top 10 Q&A)
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://meattech-pro.vercel.app';
   const faqSchema = {
@@ -63,12 +68,12 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
             <div>
-              <span style={{ display: 'inline-block', padding: '4px 14px', borderRadius: 16, background: 'rgba(255,255,255,0.15)', fontSize: '.82rem', fontWeight: 600, marginBottom: 12 }}>💬 工艺问答社区</span>
-              <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8 }}>疑难杂症讨论交流</h1>
-              <p style={{ fontSize: '.95rem', opacity: .7, maxWidth: 600 }}>遇到工艺难题？发帖求助，同行专家来解答。出水、散肉、色泽不均、保质期不达标……这里都有答案。</p>
+              <span style={{ display: 'inline-block', padding: '4px 14px', borderRadius: 16, background: 'rgba(255,255,255,0.15)', fontSize: '.82rem', fontWeight: 600, marginBottom: 12 }}>{cc.headerBadge}</span>
+              <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8 }}>{cc.headerTitle}</h1>
+              <p style={{ fontSize: '.95rem', opacity: .7, maxWidth: 600 }}>{cc.headerDesc}</p>
             </div>
             <Link href="/community/ask" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 10, background: '#FCD34D', color: '#1E3A8A', fontSize: '.95rem', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              ✏️ 我要提问
+              {cc.askBtnText}
             </Link>
           </div>
         </div>

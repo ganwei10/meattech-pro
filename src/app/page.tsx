@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { safeFindPilotLines } from '@/lib/safeQuery';
+import { getSiteGlobalConfig } from '@/lib/siteConfig';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -22,6 +23,10 @@ export default async function HomePage() {
   ]);
   // Safe PilotLine query (may fallback to SELECT * if DB not migrated yet)
   const pilotLines = await safeFindPilotLines('desc');
+
+  // Fetch global site config
+  const globalConfig = await getSiteGlobalConfig();
+  const hpConfig = globalConfig.homepage;
 
   // Parse carousel settings, fallback to defaults
   let carouselItems: any[] = [];
@@ -184,26 +189,20 @@ export default async function HomePage() {
             </div>
             {/* Full-width carousel */}
             <HomePageCarousel items={carouselItems} />
-            {/* Tools row — 3 columns horizontal */}
+            {/* Tools row — 3 columns horizontal (CMS-managed) */}
             <div className="hero-tools-row">
-              <Link href="/tool/gb2760" className="tool-card">
-                <div className="tool-icon" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📊</div>
-                <div className="tool-info"><h4>GB 2760 添加剂限量计算器</h4><p>输入添加剂名称，一键合规审查</p></div>
-              </Link>
-              <Link href="/tool/troubleshoot" className="tool-card">
-                <div className="tool-icon" style={{ background: '#FEE2E2', color: '#991B1B' }}>🚨</div>
-                <div className="tool-info"><h4>肉制品车间故障智能排查矩阵</h4><p>解决出水、散肉、色泽不均等顽疾</p></div>
-              </Link>
-              <Link href="/tool/pilot-map" className="tool-card">
-                <div className="tool-icon" style={{ background: '#D1FAE5', color: '#065F46' }}>🗺️</div>
-                <div className="tool-info"><h4>全国肉类共享中试产线地图</h4><p>在线预约闲置产能，轻资产研发</p></div>
-              </Link>
+              {hpConfig.toolCards.map((card, i) => (
+                <Link key={i} href={card.link} className="tool-card">
+                  <div className="tool-icon" style={{ background: card.bg, color: card.color }}>{card.icon}</div>
+                  <div className="tool-info"><h4>{card.title}</h4><p>{card.desc}</p></div>
+                </Link>
+              ))}
             </div>
             {/* Discussion bar - prominent entry to community */}
             <Link href="/community" className="hero-discussion-bar">
               <span className="pulse-dot"></span>
-              <span style={{ fontSize: '.88rem', fontWeight: 600 }}>🔥 工艺工程师在线讨论中</span>
-              <span style={{ fontSize: '.82rem', opacity: .75, marginLeft: 'auto' }}>立即参与 →</span>
+              <span style={{ fontSize: '.88rem', fontWeight: 600 }}>{hpConfig.discussionBarText}</span>
+              <span style={{ fontSize: '.82rem', opacity: .75, marginLeft: 'auto' }}>{hpConfig.discussionBarCta}</span>
             </Link>
           </div>
         </div>
@@ -325,8 +324,8 @@ export default async function HomePage() {
           {/* Multi-region pilot lines display */}
           <div className="pilot-grid">
             <div className="pilot-card">
-              <h4>🗺️ 全国共享中试基地（{activeRegions.length}个区域）</h4>
-              <p style={{ fontSize: '.82rem', opacity: .7, marginBottom: '16px' }}>覆盖全国 · 三类机构（高校/产业园/辅料企业）</p>
+              <h4>{hpConfig.pilotCardTitle}（{activeRegions.length}个区域）</h4>
+              <p style={{ fontSize: '.82rem', opacity: .7, marginBottom: '16px' }}>{hpConfig.pilotCardSubtitle}</p>
               <div className="line-list">
                 {pilotLines.slice(0, 8).map((line) => (
                   <Link key={line.id} href={`/booking/${line.id}`} className="line-item" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -347,13 +346,13 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="pilot-card">
-              <h4>🎛️ 远程协同研发舱（数据孪生演示）</h4>
+              <h4>{hpConfig.pilotDemo.title}</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div className="remote-video">
                   <div className="live-badge"><span className="pulse"></span>LIVE</div>
                   <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: '.95rem', fontWeight: 600, marginBottom: '6px' }}>正在进行：真空滚揉放大实验</div>
-                    <div style={{ fontSize: '.8rem', opacity: .7 }}>华南区·华南理工中试基地</div>
+                    <div style={{ fontSize: '.95rem', fontWeight: 600, marginBottom: '6px' }}>{hpConfig.pilotDemo.liveLabel}</div>
+                    <div style={{ fontSize: '.8rem', opacity: .7 }}>{hpConfig.pilotDemo.liveLocation}</div>
                   </div>
                 </div>
                 <div className="data-panel">
@@ -364,13 +363,13 @@ export default async function HomePage() {
                 </div>
                 <div className="chat-box">
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.85rem', flexShrink: 0 }}>💬</div>
-                  <div style={{ opacity: .9, lineHeight: 1.5 }}><strong style={{ color: '#FCD34D' }}>远程指挥 · 张总监：</strong>料温已到4℃，开始加胶体，注意控制添加速率在0.5kg/min以内</div>
+                  <div style={{ opacity: .9, lineHeight: 1.5 }}><strong style={{ color: '#FCD34D' }}>{hpConfig.pilotDemo.chatText.split('：')[0]}：</strong>{hpConfig.pilotDemo.chatText.split('：').slice(1).join('：')}</div>
                 </div>
               </div>
             </div>
           </div>
           <div style={{ textAlign: 'center', marginTop: '40px' }}>
-            <Link href="/booking" className="btn-book" style={{ display: 'inline-flex' }}>立即提交您的中试需求，平台专家1对1跟进 →</Link>
+            <Link href="/booking" className="btn-book" style={{ display: 'inline-flex' }}>{hpConfig.pilotBtnText}</Link>
           </div>
         </div>
       </section>
@@ -395,73 +394,64 @@ export default async function HomePage() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 40 }}>
-            {/* 技术长文 */}
-            <Link href="/category/chinese-braised" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📚</div>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>深度技术长文</h4>
-              <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>涵盖原料改性、工艺优化、添加剂应用、故障排查等实战内容。后台随时更新，前沿技术持续沉淀。</p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{allPosts.length} 篇长文</span>
-                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{categories.length} 个品类</span>
-              </div>
-              <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>浏览全部技术文章 →</span>
-            </Link>
-
-            {/* 疑难问答 — 最突出 */}
-            <Link href="/community" style={{ background: 'rgba(252,211,77,0.12)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '2px solid rgba(252,211,77,0.4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <span style={{ fontSize: '2.5rem' }}>💬</span>
-                <span style={{ padding: '2px 10px', borderRadius: 12, background: '#FCD34D', color: '#1E3A8A', fontSize: '.72rem', fontWeight: 700 }}>核心功能</span>
-              </div>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>疑难杂症讨论</h4>
-              <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>出水、散肉、色泽不均、保质期不达标……遇到工艺难题？发帖求助，同行专家来解答。</p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(252,211,77,0.2)', color: '#FCD34D' }}>在线提问</span>
-                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(252,211,77,0.2)', color: '#FCD34D' }}>同行互助</span>
-                <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(252,211,77,0.2)', color: '#FCD34D' }}>专家解答</span>
-              </div>
-              <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>进入讨论社区 →</span>
-            </Link>
-
-            {/* 微信社群 */}
-            <a href="#footer" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 16, padding: 28, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📱</div>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>技术互助社群</h4>
-              <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>{footerTitle.replace('📱 ', '')}，按品类分群，日常技术互助，私域深度沉淀。</p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {footerGroups.slice(0, 3).map((g, i) => (
-                  <span key={i} style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{g.icon} {g.name}</span>
-                ))}
-              </div>
-              <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>扫码加入交流群 ↓</span>
-            </a>
+            {/* Community cards — CMS-managed */}
+            {hpConfig.communityCards.map((card, i) => {
+              const isHighlight = card.highlight;
+              return (
+                <Link
+                  key={i}
+                  href={card.link}
+                  style={{
+                    background: isHighlight ? 'rgba(252,211,77,0.12)' : 'rgba(255,255,255,0.1)',
+                    borderRadius: 16,
+                    padding: 28,
+                    textDecoration: 'none',
+                    border: isHighlight ? '2px solid rgba(252,211,77,0.4)' : '1px solid rgba(255,255,255,0.15)',
+                  }}
+                >
+                  {isHighlight ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <span style={{ fontSize: '2.5rem' }}>{card.icon}</span>
+                      <span style={{ padding: '2px 10px', borderRadius: 12, background: '#FCD34D', color: '#1E3A8A', fontSize: '.72rem', fontWeight: 700 }}>核心功能</span>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{card.icon}</div>
+                  )}
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 8 }}>{card.title}</h4>
+                  <p style={{ fontSize: '.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 16 }}>{card.desc}</p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {card.tags && card.tags.length > 0 ? (
+                      card.tags.map((tag, ti) => (
+                        <span key={ti} style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: isHighlight ? 'rgba(252,211,77,0.2)' : 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{tag}</span>
+                      ))
+                    ) : (
+                      <>
+                        <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{allPosts.length} 篇长文</span>
+                        <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{categories.length} 个品类</span>
+                      </>
+                    )}
+                  </div>
+                  <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>
+                    {card.link === '/community' ? '进入讨论社区 →' : card.link === '#footer' ? '扫码加入交流群 ↓' : '浏览全部技术文章 →'}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
 
-          {/* 工程师工具箱 */}
+          {/* 工程师工具箱 — CMS-managed tool cards */}
           <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 28, border: '1px solid rgba(255,255,255,0.1)' }}>
             <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, textAlign: 'center' }}>工程师实战工具箱</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-              <Link href="/tool/gb2760" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
-                <span style={{ fontSize: '1.5rem' }}>📊</span>
-                <div>
-                  <div style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff' }}>GB 2760 添加剂计算器</div>
-                  <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)' }}>一键合规审查</div>
-                </div>
-              </Link>
-              <Link href="/tool/troubleshoot" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
-                <span style={{ fontSize: '1.5rem' }}>🚨</span>
-                <div>
-                  <div style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff' }}>故障智能排查矩阵</div>
-                  <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)' }}>出水散肉一键诊断</div>
-                </div>
-              </Link>
-              <Link href="/tool/pilot-map" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
-                <span style={{ fontSize: '1.5rem' }}>🗺️</span>
-                <div>
-                  <div style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff' }}>中试产线地图</div>
-                  <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)' }}>在线预约闲置产能</div>
-                </div>
-              </Link>
+              {hpConfig.toolCards.map((card, i) => (
+                <Link key={i} href={card.link} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
+                  <span style={{ fontSize: '1.5rem' }}>{card.icon}</span>
+                  <div>
+                    <div style={{ fontSize: '.9rem', fontWeight: 600, color: '#fff' }}>{card.title}</div>
+                    <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.5)' }}>{card.desc}</div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>

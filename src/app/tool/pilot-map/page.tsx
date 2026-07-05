@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { safeFindPilotLines } from '@/lib/safeQuery';
 import { prisma } from '@/lib/prisma';
+import { getSiteGlobalConfig } from '@/lib/siteConfig';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PilotMapTabs from './PilotMapTabs';
@@ -15,16 +16,10 @@ const typeConfig: Record<string, { label: string; icon: string; color: string; b
 
 export default async function PilotMapPage() {
   const lines = await safeFindPilotLines('asc');
-
-  // Read pilot config from settings
-  let pilotIntro = '覆盖全国主要区域的肉类中试资源网络，每区域均面向三类客户服务：高校科研院所（CRO研发）、产业园公共平台（轻资产试错）、辅料企业演示中心（风味调优与爆款逆向）。';
-  try {
-    const setting = await prisma.setting.findUnique({ where: { key: 'homepage_pilot' } });
-    if (setting) {
-      const config = JSON.parse(setting.value);
-      if (config.mapIntro) pilotIntro = config.mapIntro;
-    }
-  } catch { /* defaults */ }
+  const globalConfig = await getSiteGlobalConfig();
+  const pilotIntro = globalConfig.tools.pilotMap.mapIntro;
+  const pageTitle = globalConfig.tools.pilotMap.title;
+  const pageSubtitle = globalConfig.tools.pilotMap.subtitle;
 
   // Group by region
   const regionOrder = ['华南', '华东', '华北', '华中', '西南', '东北', '其他'];
@@ -49,9 +44,9 @@ export default async function PilotMapPage() {
           {/* Header */}
           <div style={{ marginBottom: 32 }}>
             <Link href="/" style={{ color: '#1E3A8A', fontSize: '.9rem', textDecoration: 'none' }}>← 返回首页</Link>
-            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E3A8A', marginTop: 12 }}>🗺️ 全国共享中试基地地图</h1>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E3A8A', marginTop: 12 }}>{pageTitle}</h1>
             <p style={{ color: '#6B7280', marginTop: 8, maxWidth: 800, lineHeight: 1.7 }}>
-              {pilotIntro}
+              {pageSubtitle} {pilotIntro}
             </p>
           </div>
 
