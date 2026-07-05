@@ -39,13 +39,21 @@ interface Bill {
   booking: { id: number; contactName: string };
 }
 
+interface Favorite {
+  id: number;
+  targetType: string;
+  targetId: number;
+  createdAt: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'bills'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'bills' | 'favorites'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -67,9 +75,10 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const [bRes, blRes] = await Promise.all([
+    const [bRes, blRes, fRes] = await Promise.all([
       fetch('/api/me/bookings'),
       fetch('/api/me/bills'),
+      fetch('/api/favorites'),
     ]);
     if (bRes.ok) {
       const d = await bRes.json();
@@ -78,6 +87,10 @@ export default function DashboardPage() {
     if (blRes.ok) {
       const d = await blRes.json();
       setBills(d.bills || []);
+    }
+    if (fRes.ok) {
+      const d = await fRes.json();
+      setFavorites(d.favorites || []);
     }
     setLoading(false);
   };
@@ -144,6 +157,10 @@ export default function DashboardPage() {
             <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>待支付</div>
             <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#D97706' }}>{bills.filter(b => b.status === 'PENDING').length}</div>
           </div>
+          <div style={{ background: '#FFF', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>我的收藏</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E3A8A' }}>{favorites.length}</div>
+          </div>
         </div>
 
         {/* Tab 切换 */}
@@ -160,6 +177,12 @@ export default function DashboardPage() {
             borderBottom: activeTab === 'bills' ? '2px solid #1E3A8A' : '2px solid transparent',
             cursor: 'pointer', marginTop: -2,
           }}>📄 我的账单</button>
+          <button onClick={() => setActiveTab('favorites')} style={{
+            padding: '12px 24px', background: 'none', border: 'none', fontSize: '.95rem', fontWeight: activeTab === 'favorites' ? 700 : 400,
+            color: activeTab === 'favorites' ? '#1E3A8A' : '#6B7280',
+            borderBottom: activeTab === 'favorites' ? '2px solid #1E3A8A' : '2px solid transparent',
+            cursor: 'pointer', marginTop: -2,
+          }}>❤️ 我的收藏</button>
         </div>
 
         {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>加载中...</div> : (
@@ -241,6 +264,50 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {/* 收藏列表 */}
+            {activeTab === 'favorites' && (
+              <div>
+                {favorites.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 60, background: '#FFF', borderRadius: 12, color: '#9CA3AF' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>❤️</div>
+                    <p>暂无收藏内容</p>
+                    <p style={{ fontSize: '.85rem', marginTop: 8 }}>浏览<a href="/article" style={{ color: '#1E3A8A', fontWeight: 600 }}>技术文章</a>或<a href="/tool/pilot-map" style={{ color: '#1E3A8A', fontWeight: 600 }}>中试产线</a>，点击心形图标即可收藏</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {favorites.map(f => {
+                      const isArticle = f.targetType === 'ARTICLE';
+                      const isPilot = f.targetType === 'PILOT_LINE';
+                      return (
+                        <div key={f.id} style={{ background: '#FFF', borderRadius: 12, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{
+                              padding: '4px 10px', borderRadius: 8, fontSize: '.75rem', fontWeight: 600,
+                              background: isArticle ? '#DBEAFE' : '#D1FAE5',
+                              color: isArticle ? '#1E40AF' : '#065F46',
+                            }}>
+                              {isArticle ? '文章' : isPilot ? '产线' : f.targetType}
+                            </span>
+                            <span style={{ fontSize: '.9rem', color: '#374151' }}>
+                              {isArticle ? `文章收藏 (ID: ${f.targetId})` : isPilot ? `产线收藏 (ID: ${f.targetId})` : `${f.targetType} #${f.targetId}`}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ fontSize: '.78rem', color: '#9CA3AF' }}>{new Date(f.createdAt).toLocaleDateString('zh-CN')}</span>
+                            {isPilot && (
+                              <Link href={`/booking/${f.targetId}`} style={{
+                                color: '#1E3A8A', fontWeight: 600, fontSize: '.85rem', textDecoration: 'none',
+                                padding: '4px 14px', borderRadius: 6, background: '#EFF6FF',
+                              }}>查看详情</Link>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

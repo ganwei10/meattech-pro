@@ -17,6 +17,8 @@ model User {
   company   String?  
   createdAt DateTime @default(now())
   lastLogin DateTime? // 最后登录时间
+  reviews   Review[]
+  favorites Favorite[]
 }
 
 model Category {
@@ -109,6 +111,7 @@ model Booking {
   updatedAt       DateTime @updatedAt
   // 新增关联
   bill            Bill?    // 关联的账单
+  reviews         Review[] // 关联的评价
 }
 
 model Bill {
@@ -179,4 +182,29 @@ model Media {
   caption       String   @default("") // 标题/说明
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  bookingId Int
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  rating    Int      // 1-5 星评分
+  content   String   // 评价正文
+  reply     String?  // 机构回复
+  replyAt   DateTime? // 回复时间
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  targetType String   // ARTICLE 或 PILOT_LINE
+  targetId   Int
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, targetType, targetId])
 }

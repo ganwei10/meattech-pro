@@ -86,3 +86,49 @@ export async function safeFindBookingsWithLine(where?: any): Promise<any[]> {
     return bookings;
   }
 }
+
+/**
+ * Safe Reviews query - falls back to raw SQL if Prisma query fails
+ */
+export async function safeFindReviews(bookingId?: number): Promise<any[]> {
+  try {
+    const where = bookingId ? { bookingId } : {};
+    return await prisma.review.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        booking: { select: { id: true, lineId: true, company: true, contactName: true } },
+      },
+    });
+  } catch {
+    // Fallback to raw SQL
+    try {
+      let sql = `SELECT r.*, u.name as "userName", u.email as "userEmail", b."company" as "bookingCompany", b."contactName" as "bookingContactName", b."lineId" as "bookingLineId" FROM "Review" r LEFT JOIN "User" u ON r."userId" = u.id LEFT JOIN "Booking" b ON r."bookingId" = b.id`;
+      if (bookingId) {
+        return await prisma.$queryRawUnsafe(`${sql} WHERE r."bookingId" = ${bookingId} ORDER BY r."createdAt" DESC`);
+      }
+      return await prisma.$queryRawUnsafe(`${sql} ORDER BY r."createdAt" DESC`);
+    } catch {
+      return [];
+    }
+  }
+}
+
+/**
+ * Safe Favorites query - falls back to raw SQL if Prisma query fails
+ */
+export async function safeFindFavorites(userId: number): Promise<any[]> {
+  try {
+    return await prisma.favorite.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  } catch {
+    try {
+      return await prisma.$queryRawUnsafe(`SELECT * FROM "Favorite" WHERE "userId" = ${userId} ORDER BY "createdAt" DESC`);
+    } catch {
+      return [];
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import FavoriteButton from '@/components/FavoriteButton';
 
 interface LineData {
   id: number;
@@ -142,7 +143,10 @@ function PilotCard({ line, config, cardLabels }: { line: LineData; config: TypeC
             ● {line.status === 'AVAILABLE' ? cardLabels.available : cardLabels.booked}
           </span>
         </div>
-        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1F2937', marginBottom: 6, lineHeight: 1.4 }}>{line.name}</h3>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1F2937', lineHeight: 1.4, margin: 0, flex: 1 }}>{line.name}</h3>
+          <FavoriteButton targetType="PILOT_LINE" targetId={line.id} />
+        </div>
         <div style={{ fontSize: '.8rem', color: '#9CA3AF', marginBottom: 12 }}>📍 {line.region} · {line.capacity || cardLabels.capacityFallback}</div>
       </div>
 

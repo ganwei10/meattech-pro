@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { getQAItems } from '@/lib/qaSeedData';
+import { getArticleItems } from '@/lib/articleSeedData';
 import { defaultSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
@@ -743,6 +744,97 @@ export async function GET() {
       logs.push('Media table already exists or skip');
     }
 
+    // 15.5 Create Review table
+    logs.push('Creating Review table...');
+    try {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "Review" (
+          id SERIAL PRIMARY KEY,
+          "bookingId" INTEGER NOT NULL,
+          "userId" INTEGER,
+          "rating" INTEGER NOT NULL,
+          "content" TEXT NOT NULL,
+          "reply" TEXT,
+          "replyAt" TIMESTAMP(3),
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3)
+        )
+      `);
+      try { await prisma.$executeRawUnsafe(`ALTER TABLE "Review" ADD CONSTRAINT "Review_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"(id) ON DELETE RESTRICT ON UPDATE CASCADE`); } catch (e) {}
+      try { await prisma.$executeRawUnsafe(`ALTER TABLE "Review" ADD CONSTRAINT "Review_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE SET NULL ON UPDATE CASCADE`); } catch (e) {}
+      await prisma.$executeRawUnsafe(`UPDATE "Review" SET "updatedAt" = "createdAt" WHERE "updatedAt" IS NULL`);
+      logs.push('Review table OK');
+    } catch (e: any) {
+      logs.push('Review table already exists or skip');
+    }
+
+    // 15.6 Create Favorite table
+    logs.push('Creating Favorite table...');
+    try {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "Favorite" (
+          id SERIAL PRIMARY KEY,
+          "userId" INTEGER NOT NULL,
+          "targetType" TEXT NOT NULL,
+          "targetId" INTEGER NOT NULL,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      try { await prisma.$executeRawUnsafe(`ALTER TABLE "Favorite" ADD CONSTRAINT "Favorite_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE RESTRICT ON UPDATE CASCADE`); } catch (e) {}
+      try { await prisma.$executeRawUnsafe(`ALTER TABLE "Favorite" ADD CONSTRAINT "Favorite_userId_targetType_targetId_key" UNIQUE ("userId", "targetType", "targetId")`); } catch (e) {}
+      logs.push('Favorite table OK');
+    } catch (e: any) {
+      logs.push('Favorite table already exists or skip');
+    }
+
+    // 15.7 Seed review sample data
+    logs.push('Seeding review sample data...');
+    try {
+      const existingReviews = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "Review" LIMIT 1`;
+      if (existingReviews.length === 0) {
+        // Find existing bookings to attach reviews to
+        const bookings = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "Booking" LIMIT 3`;
+        const admin = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "User" WHERE email = 'admin@meattech.pro' LIMIT 1`;
+        const adminId = admin.length > 0 ? admin[0].id : null;
+
+        const sampleReviews = [
+          {
+            bookingId: bookings[0]?.id || 1,
+            userId: adminId,
+            rating: 5,
+            content: '产线设备齐全，操作人员专业，实验过程非常顺利。烟熏炉温度控制精确，成品色泽和口感都达到了预期效果。',
+            reply: '感谢您的评价！我们将继续保持高标准的中试服务。',
+          },
+          {
+            bookingId: bookings[1]?.id || 2,
+            userId: adminId,
+            rating: 4,
+            content: '中试服务整体不错，斩拌机容量非常适合小批量实验。建议增加更多辅料种类的配置选项。',
+            reply: '感谢您的反馈！我们正在扩充辅料库，后续会支持更多种类的原辅料配置。',
+          },
+          {
+            bookingId: bookings[2]?.id || 3,
+            userId: adminId,
+            rating: 5,
+            content: '液氮速冻隧道效果惊艳！从卤煮到速冻包装全流程一气呵成，成品的细胞结构保持完好，解冻后汁液流失率极低。',
+          },
+        ];
+
+        for (const r of sampleReviews) {
+          const replyAt = r.reply ? new Date() : null;
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO "Review" ("bookingId", "userId", "rating", "content", "reply", "replyAt", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+            r.bookingId, r.userId, r.rating, r.content, r.reply || null, replyAt
+          );
+        }
+        logs.push(`Seeded ${sampleReviews.length} sample reviews`);
+      } else {
+        logs.push('Reviews already seeded');
+      }
+    } catch (e: any) {
+      logs.push(`Review seed skip: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
     // 16. Add new columns to Product
     logs.push('Adding new columns to Product...');
     try {
@@ -888,6 +980,45 @@ export async function GET() {
       }
     } catch (e) {
       logs.push(`Carousel update skip: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
+    // 20. Seed 10 deep-dive technical articles
+    logs.push('Seeding 10 technical articles...');
+    try {
+      const articleItems = getArticleItems();
+      let articleSeeded = 0;
+      for (const item of articleItems) {
+        const existingArticle = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "Post" WHERE slug = ${item.slug} LIMIT 1`;
+        if (existingArticle.length > 0) continue;
+
+        // Find category by slug
+        const category = await prisma.$queryRaw<Array<{ id: number }>>`SELECT id FROM "Category" WHERE slug = ${item.categorySlug} LIMIT 1`;
+        if (category.length === 0) {
+          logs.push(`Category "${item.categorySlug}" not found for article "${item.title}", skip`);
+          continue;
+        }
+
+        const daysAgo = Math.floor(Math.random() * 14) + 1;
+        const createdDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+        await prisma.post.create({
+          data: {
+            title: item.title,
+            slug: item.slug,
+            excerpt: item.excerpt,
+            content: item.content,
+            author: item.author,
+            tags: item.tags,
+            status: 'PUBLISHED',
+            categoryId: category[0].id,
+            createdAt: createdDate,
+            updatedAt: createdDate,
+          },
+        });
+        articleSeeded++;
+      }
+      logs.push(`Seeded ${articleSeeded} technical articles (out of ${articleItems.length})`);
+    } catch (e) {
+      logs.push(`Article seeding error: ${e instanceof Error ? e.message : String(e)}`);
     }
 
     logs.push('=== Setup completed successfully ===');

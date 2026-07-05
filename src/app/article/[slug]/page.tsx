@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import FavoriteButton from '@/components/FavoriteButton';
 import { getSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
@@ -82,7 +83,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             <span key={i} style={{ background: '#F3F4F6', color: '#6B7280', padding: '3px 10px', borderRadius: '4px', fontSize: '.75rem' }}>#{tag.trim()}</span>
           ))}
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '16px', lineHeight: 1.4 }}>{post.title}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '16px' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1.4, margin: 0 }}>{post.title}</h1>
+          <FavoriteButton targetType="ARTICLE" targetId={post.id} />
+        </div>
         <div style={{ display: 'flex', gap: '16px', fontSize: '.85rem', color: '#9CA3AF', marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E5E7EB' }}>
           <span>👨‍🔬 {post.author}</span>
           <span>📅 {new Date(post.createdAt).toISOString().slice(0, 10)}</span>

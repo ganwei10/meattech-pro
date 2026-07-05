@@ -2,6 +2,7 @@ import { safeFindBookingWithLine } from '@/lib/safeQuery';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ReviewSection from '@/components/ReviewSection';
 import { getSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
@@ -81,6 +82,8 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
             </div>
           )}
         </div>
+
+        <ReviewSection bookingId={booking.id} />
       </div>
       <Footer />
     </>
