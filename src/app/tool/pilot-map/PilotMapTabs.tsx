@@ -171,7 +171,6 @@ function PilotCard({ line, config }: { line: LineData; config: TypeConfigItem })
       {line.pricePerDay > 0 && (
         <div style={{ padding: '0 20px', marginBottom: 16 }}>
           <span style={{ fontSize: '.85rem', color: '#059669', fontWeight: 700 }}>💰 ¥{line.pricePerDay.toLocaleString()}/天</span>
-          <span style={{ fontSize: '.75rem', color: '#9CA3AF', marginLeft: 8 }}>服务费 {line.serviceFeePercent}%</span>
         </div>
       )}
 

@@ -761,6 +761,7 @@ export async function GET() {
     logs.push('Seeding homepage settings...');
     const homepageSettings = [
       { key: 'homepage_carousel', value: JSON.stringify([
+        { tag: '平台介绍', title: '肉制品研发与智能中试平台', desc: '从深度技术长文到中试产线预约，从工艺问答到同行交流——全链路服务肉制品研发，赋能每一位肉品工艺工程师', bg: 'carousel-bg-4', btn: '了解平台全部功能', link: '/tool/pilot-map' },
         { tag: '商超爆款逆向工程', title: '山姆某款爆汁脆皮肠', desc: '从"货架到车间"的工业化落地工艺参数拆解，涵盖原料配比、灌装工艺、蒸煮曲线全流程', bg: 'carousel-bg-1', btn: '点击查看工艺说明书及基础配方', link: '/product/1' },
         { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/booking' },
       ]) },
@@ -808,7 +809,7 @@ export async function GET() {
     ];
     for (const s of homepageSettings) {
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "Setting" (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+        `INSERT INTO "Setting" (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
         s.key, s.value
       );
     }
@@ -855,14 +856,15 @@ export async function GET() {
       logs.push(`Q&A seeding error: ${e instanceof Error ? e.message : String(e)}`);
     }
 
-    // 19. Update carousel seed to include platform highlight slide
-    logs.push('Updating carousel with platform slide...');
+    // 19. One-time migration: add platform highlight slide to existing carousels that don't have it
+    // (New installations get it directly from the seed data in Step 17)
+    logs.push('Checking carousel for platform slide...');
     try {
       const existingCarousel = await prisma.setting.findUnique({ where: { key: 'homepage_carousel' } });
       if (existingCarousel) {
         const carouselData = JSON.parse(existingCarousel.value);
         const hasPlatformSlide = carouselData.some((item: any) => item.tag === '平台介绍');
-        if (!hasPlatformSlide) {
+        if (!hasPlatformSlide && Array.isArray(carouselData)) {
           carouselData.unshift({
             tag: '平台介绍',
             title: '肉制品研发与智能中试平台',
@@ -872,9 +874,9 @@ export async function GET() {
             link: '/tool/pilot-map',
           });
           await prisma.$executeRawUnsafe(`UPDATE "Setting" SET value = $1 WHERE key = 'homepage_carousel'`, JSON.stringify(carouselData));
-          logs.push('Carousel updated with platform slide');
+          logs.push('Carousel updated with platform slide (one-time migration)');
         } else {
-          logs.push('Carousel already has platform slide');
+          logs.push('Carousel already has platform slide (or not an array, skip)');
         }
       }
     } catch (e) {

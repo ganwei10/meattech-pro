@@ -267,7 +267,7 @@ export default function PilotLinesAdminPage() {
                   <input type="number" value={form.pricePerDay} onChange={e => setForm({ ...form, pricePerDay: e.target.value })} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #D1D5DB', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: 4, fontSize: '.9rem', fontWeight: 500 }}>服务费百分比（%）</label>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: '.9rem', fontWeight: 500 }}>服务费百分比（%） <span style={{ fontSize: '.75rem', color: '#9CA3AF' }}>仅运营参考，不对用户展示</span></label>
                   <input type="number" value={form.serviceFeePercent} onChange={e => setForm({ ...form, serviceFeePercent: e.target.value })} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #D1D5DB', boxSizing: 'border-box' }} />
                 </div>
                 <div>
