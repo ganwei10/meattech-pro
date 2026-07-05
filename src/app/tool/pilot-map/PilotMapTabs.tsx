@@ -24,15 +24,27 @@ interface TypeConfigItem {
   bg: string;
   desc: string;
   model: string;
+  sectionTitle: string;
+}
+
+interface CardLabels {
+  available: string;
+  booked: string;
+  advantages: string;
+  equipment: string;
+  cooperation: string;
+  bookBtn: string;
+  capacityFallback: string;
 }
 
 interface PilotMapTabsProps {
   regions: string[];
   regionMap: Record<string, LineData[]>;
   typeConfig: Record<string, TypeConfigItem>;
+  cardLabels: CardLabels;
 }
 
-export default function PilotMapTabs({ regions, regionMap, typeConfig }: PilotMapTabsProps) {
+export default function PilotMapTabs({ regions, regionMap, typeConfig, cardLabels }: PilotMapTabsProps) {
   const [activeRegion, setActiveRegion] = useState(regions[0] || '');
 
   if (regions.length === 0) return null;
@@ -70,30 +82,23 @@ export default function PilotMapTabs({ regions, regionMap, typeConfig }: PilotMa
       </div>
 
       {/* Institutions by type within the selected region */}
-      {/* Universities */}
       {universities.length > 0 && (
-        <SectionBlock title="高校及科研院所" config={typeConfig.UNIVERSITY} lines={universities} typeKey="UNIVERSITY" />
+        <SectionBlock title={typeConfig.UNIVERSITY?.sectionTitle || '高校及科研院所'} config={typeConfig.UNIVERSITY} lines={universities} cardLabels={cardLabels} />
       )}
-
-      {/* Parks */}
       {parks.length > 0 && (
-        <SectionBlock title="产业园与公共服务平台" config={typeConfig.PARK} lines={parks} typeKey="PARK" />
+        <SectionBlock title={typeConfig.PARK?.sectionTitle || '产业园与公共服务平台'} config={typeConfig.PARK} lines={parks} cardLabels={cardLabels} />
       )}
-
-      {/* Enterprises */}
       {enterprises.length > 0 && (
-        <SectionBlock title="辅料及添加剂企业演示中心" config={typeConfig.ENTERPRISE} lines={enterprises} typeKey="ENTERPRISE" />
+        <SectionBlock title={typeConfig.ENTERPRISE?.sectionTitle || '辅料及添加剂企业演示中心'} config={typeConfig.ENTERPRISE} lines={enterprises} cardLabels={cardLabels} />
       )}
-
-      {/* Others */}
       {others.length > 0 && (
-        <SectionBlock title="其他中试产线" config={{ label: '其他', icon: '📦', color: '#374151', bg: '#F3F4F6', desc: '已入驻的共享产线资源', model: '' }} lines={others} typeKey="UNIVERSITY" />
+        <SectionBlock title={typeConfig.OTHER?.sectionTitle || '其他中试产线'} config={typeConfig.OTHER || { label: '其他', icon: '📦', color: '#374151', bg: '#F3F4F6', desc: '已入驻的共享产线资源', model: '', sectionTitle: '其他中试产线' }} lines={others} cardLabels={cardLabels} />
       )}
     </div>
   );
 }
 
-function SectionBlock({ title, config, lines, typeKey }: { title: string; config: TypeConfigItem; lines: LineData[]; typeKey: string }) {
+function SectionBlock({ title, config, lines, cardLabels }: { title: string; config: TypeConfigItem; lines: LineData[]; cardLabels: CardLabels }) {
   return (
     <div style={{ marginBottom: 40 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -110,14 +115,14 @@ function SectionBlock({ title, config, lines, typeKey }: { title: string; config
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
         {lines.map(line => (
-          <PilotCard key={line.id} line={line} config={config} />
+          <PilotCard key={line.id} line={line} config={config} cardLabels={cardLabels} />
         ))}
       </div>
     </div>
   );
 }
 
-function PilotCard({ line, config }: { line: LineData; config: TypeConfigItem }) {
+function PilotCard({ line, config, cardLabels }: { line: LineData; config: TypeConfigItem; cardLabels: CardLabels }) {
   return (
     <div style={{
       background: '#fff', borderRadius: 12, overflow: 'hidden',
@@ -134,23 +139,23 @@ function PilotCard({ line, config }: { line: LineData; config: TypeConfigItem })
             background: line.status === 'AVAILABLE' ? '#D1FAE5' : '#FEF3C7',
             color: line.status === 'AVAILABLE' ? '#065F46' : '#92400E',
           }}>
-            ● {line.status === 'AVAILABLE' ? '有档期' : '需预约'}
+            ● {line.status === 'AVAILABLE' ? cardLabels.available : cardLabels.booked}
           </span>
         </div>
         <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1F2937', marginBottom: 6, lineHeight: 1.4 }}>{line.name}</h3>
-        <div style={{ fontSize: '.8rem', color: '#9CA3AF', marginBottom: 12 }}>📍 {line.region} · {line.capacity || '产能面议'}</div>
+        <div style={{ fontSize: '.8rem', color: '#9CA3AF', marginBottom: 12 }}>📍 {line.region} · {line.capacity || cardLabels.capacityFallback}</div>
       </div>
 
       {line.advantages && (
         <div style={{ padding: '0 20px', marginBottom: 12 }}>
-          <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#6B7280', marginBottom: 4 }}>✨ 核心优势</div>
+          <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#6B7280', marginBottom: 4 }}>{cardLabels.advantages}</div>
           <p style={{ fontSize: '.85rem', color: '#374151', lineHeight: 1.6 }}>{line.advantages.length > 120 ? line.advantages.slice(0, 120) + '...' : line.advantages}</p>
         </div>
       )}
 
       {line.equipment && (
         <div style={{ padding: '0 20px', marginBottom: 12 }}>
-          <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#6B7280', marginBottom: 6 }}>🛠️ 设备配置</div>
+          <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#6B7280', marginBottom: 6 }}>{cardLabels.equipment}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             {line.equipment.split(',').slice(0, 4).map((eq: string, i: number) => (
               <span key={i} style={{ fontSize: '.72rem', padding: '2px 8px', borderRadius: 4, background: '#F3F4F6', color: '#374151' }}>{eq.trim()}</span>
@@ -161,7 +166,7 @@ function PilotCard({ line, config }: { line: LineData; config: TypeConfigItem })
 
       {line.cooperationModel && (
         <div style={{ padding: '0 20px', marginBottom: 16 }}>
-          <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#6B7280', marginBottom: 4 }}>🤝 合作模式</div>
+          <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#6B7280', marginBottom: 4 }}>{cardLabels.cooperation}</div>
           <p style={{ fontSize: '.82rem', color: line.cooperationModel.includes('CRO') ? '#1E3A8A' : line.cooperationModel.includes('场租') ? '#065F46' : '#92400E', lineHeight: 1.5, fontWeight: 500 }}>
             {line.cooperationModel.length > 80 ? line.cooperationModel.slice(0, 80) + '...' : line.cooperationModel}
           </p>
@@ -180,7 +185,7 @@ function PilotCard({ line, config }: { line: LineData; config: TypeConfigItem })
           background: '#1E3A8A', color: '#fff', borderRadius: 8, fontSize: '.88rem',
           textDecoration: 'none', fontWeight: 600,
         }}>
-          立即预约 →
+          {cardLabels.bookBtn}
         </Link>
       </div>
     </div>

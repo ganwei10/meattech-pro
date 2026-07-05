@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,25 +44,28 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
     total = posts.length + products.length;
   }
 
+  const config = await getSiteGlobalConfig();
+  const sc = config.search;
+
   return (
     <>
       <Header />
       <div className="container" style={{ paddingTop: 120, paddingBottom: 60, minHeight: '60vh' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 8 }}>
-          搜索结果 {q && <span style={{ color: '#6B7280', fontSize: '1.2rem' }}>— "{q}"</span>}
+          {sc.title} {q && <span style={{ color: '#6B7280', fontSize: '1.2rem' }}>— "{q}"</span>}
         </h1>
-        <p style={{ color: '#6B7280', marginBottom: 32, fontSize: '.9rem' }}>共找到 {total} 条结果</p>
+        <p style={{ color: '#6B7280', marginBottom: 32, fontSize: '.9rem' }}>{sc.resultCountText} {total} 条结果</p>
 
         {total === 0 && q && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#9CA3AF' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>🔍</div>
-            <p>未找到相关内容，试试其他关键词？</p>
+            <div style={{ fontSize: '3rem', marginBottom: 16 }}>{sc.emptyIcon}</div>
+            <p>{sc.emptyText}</p>
           </div>
         )}
 
         {posts.length > 0 && (
           <div style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: '#1E3A8A' }}>📄 技术文章 ({posts.length})</h2>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: '#1E3A8A' }}>{sc.articlesHeader} ({posts.length})</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {posts.map(post => (
                 <Link href={`/article/${post.slug}`} key={post.id} style={{ display: 'block', background: '#fff', padding: 20, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
@@ -79,7 +83,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
 
         {products.length > 0 && (
           <div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: '#1E3A8A' }}>🛒 爆款产品 ({products.length})</h2>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: '#1E3A8A' }}>{sc.productsHeader} ({products.length})</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
               {products.map(p => (
                 <div key={p.id} style={{ background: '#fff', padding: 20, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>

@@ -227,10 +227,10 @@ export default async function HomePage() {
                 <div className="reverse-card-body">
                   <h4>{item.title}</h4>
                   <div className="difficulty-box">
-                    <div className="label">⚡ 关键难点</div>
+                    <div className="label">{hpConfig.keyDifficulty}</div>
                     <div className="text">{item.difficulty}</div>
                   </div>
-                  <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>查看逆向工艺报告 →</span>
+                  <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>{hpConfig.reverseReportLink}</span>
                 </div>
               </Link>
             ))}
@@ -244,10 +244,10 @@ export default async function HomePage() {
                 <div className="reverse-card-body">
                   <h4>{p.title}</h4>
                   <div className="difficulty-box">
-                    <div className="label">⚡ 关键难点</div>
+                    <div className="label">{hpConfig.keyDifficulty}</div>
                     <div className="text">{p.difficulty}</div>
                   </div>
-                  <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>查看逆向工艺报告 →</span>
+                  <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>{hpConfig.reverseReportLink}</span>
                 </div>
               </Link>
             ))}
@@ -265,7 +265,7 @@ export default async function HomePage() {
           <p className="section-intro">{sectionsConfig.scienceIntro}</p>
           <div className="science-layout">
             <div className="category-tree">
-              <h4 style={{ fontSize: '.9rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>📂 品类导航</h4>
+              <h4 style={{ fontSize: '.9rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>{hpConfig.categoryNavTitle}</h4>
               {categories.map((cat) => (
                 <Link key={cat.id} href={`/category/${cat.slug}`} className="tree-item" style={{ textDecoration: 'none', color: 'inherit' }}>
                   <span style={{ fontSize: '1.1rem' }}>{cat.icon === 'folder' ? '📂' : cat.icon}</span>
@@ -279,7 +279,7 @@ export default async function HomePage() {
                 <Link href={`/article/${post.slug}`} key={post.id} className="science-article-card">
                   <div className="article-header">
                     <span className={`tag ${post.tags.includes('故障') ? 'red' : ''}`}>{post.tags.split(',')[0] || '技术专题'}</span>
-                    <span style={{ fontSize: '.8rem', color: '#9CA3AF' }}>技术前沿 · 深度长文</span>
+                    <span style={{ fontSize: '.8rem', color: '#9CA3AF' }}>{hpConfig.techFrontierText}</span>
                   </div>
                   <div className="article-body">
                     <h4>《{post.title}》</h4>
@@ -293,8 +293,8 @@ export default async function HomePage() {
                 </Link>
               )) : (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
-                  <p style={{ fontSize: '1rem', marginBottom: '12px' }}>暂无文章，请在后台 CMS 发布文章后显示</p>
-                  <Link href="/admin/posts/new" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600 }}>去发布文章 →</Link>
+                  <p style={{ fontSize: '1rem', marginBottom: '12px' }}>{hpConfig.noPostsText}</p>
+                  <Link href="/admin/posts/new" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600 }}>{hpConfig.noPostsCta}</Link>
                 </div>
               )}
             </div>
@@ -336,30 +336,30 @@ export default async function HomePage() {
                       <span className="line-name">{line.name.length > 20 ? line.name.slice(0, 20) + '...' : line.name}</span>
                     </div>
                     <span className={`line-status ${line.status === 'AVAILABLE' ? 'available' : 'booked'}`}>
-                      ● {line.status === 'AVAILABLE' ? '有档期' : '需预约'}
+                      ● {line.status === 'AVAILABLE' ? hpConfig.availableText : hpConfig.bookedText}
                     </span>
                   </Link>
                 ))}
               </div>
               <Link href="/tool/pilot-map" style={{ display: 'block', textAlign: 'center', marginTop: 12, padding: '8px 0', background: 'rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontSize: '.85rem', fontWeight: 600, textDecoration: 'none' }}>
-                查看全部 {pilotLines.length} 家机构 →
+                {hpConfig.viewAllInstitutions} {pilotLines.length} 家机构 →
               </Link>
             </div>
             <div className="pilot-card">
               <h4>{hpConfig.pilotDemo.title}</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div className="remote-video">
-                  <div className="live-badge"><span className="pulse"></span>LIVE</div>
+                  <div className="live-badge"><span className="pulse"></span>{hpConfig.liveBadge}</div>
                   <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
                     <div style={{ fontSize: '.95rem', fontWeight: 600, marginBottom: '6px' }}>{hpConfig.pilotDemo.liveLabel}</div>
                     <div style={{ fontSize: '.8rem', opacity: .7 }}>{hpConfig.pilotDemo.liveLocation}</div>
                   </div>
                 </div>
                 <div className="data-panel">
-                  <div className="data-item"><span className="label">真空度</span><span className="value">-0.08 MPa</span></div>
-                  <div className="data-item"><span className="label">料温</span><span className="value">4.2℃</span></div>
-                  <div className="data-item"><span className="label">转速</span><span className="value">8 rpm</span></div>
-                  <div className="data-item"><span className="label">运行时间</span><span className="value">00:42:18</span></div>
+                  <div className="data-item"><span className="label">{hpConfig.dataPanelLabels.vacuum}</span><span className="value">{hpConfig.dataPanelValues.vacuum}</span></div>
+                  <div className="data-item"><span className="label">{hpConfig.dataPanelLabels.temp}</span><span className="value">{hpConfig.dataPanelValues.temp}</span></div>
+                  <div className="data-item"><span className="label">{hpConfig.dataPanelLabels.speed}</span><span className="value">{hpConfig.dataPanelValues.speed}</span></div>
+                  <div className="data-item"><span className="label">{hpConfig.dataPanelLabels.runtime}</span><span className="value">{hpConfig.dataPanelValues.runtime}</span></div>
                 </div>
                 <div className="chat-box">
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.85rem', flexShrink: 0 }}>💬</div>
@@ -386,10 +386,10 @@ export default async function HomePage() {
           {/* 快速提问入口 — 大号CTA */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 40 }}>
             <Link href="/community/ask" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', borderRadius: 28, background: '#FCD34D', color: '#1E3A8A', fontSize: '1rem', fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 20px rgba(252,211,77,0.3)' }}>
-              ✏️ 立即提问
+              {hpConfig.askNowBtn}
             </Link>
             <Link href="/community" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', borderRadius: 28, background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: '1rem', fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)' }}>
-              💬 浏览全部讨论
+              {hpConfig.browseAllBtn}
             </Link>
           </div>
 
@@ -412,7 +412,7 @@ export default async function HomePage() {
                   {isHighlight ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <span style={{ fontSize: '2.5rem' }}>{card.icon}</span>
-                      <span style={{ padding: '2px 10px', borderRadius: 12, background: '#FCD34D', color: '#1E3A8A', fontSize: '.72rem', fontWeight: 700 }}>核心功能</span>
+                      <span style={{ padding: '2px 10px', borderRadius: 12, background: '#FCD34D', color: '#1E3A8A', fontSize: '.72rem', fontWeight: 700 }}>{hpConfig.coreFeatureBadge}</span>
                     </div>
                   ) : (
                     <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{card.icon}</div>
@@ -426,13 +426,13 @@ export default async function HomePage() {
                       ))
                     ) : (
                       <>
-                        <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{allPosts.length} 篇长文</span>
-                        <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{categories.length} 个品类</span>
+                        <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{allPosts.length} {hpConfig.postCountText}</span>
+                        <span style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', color: '#FCD34D' }}>{categories.length} {hpConfig.categoryCountText}</span>
                       </>
                     )}
                   </div>
                   <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>
-                    {card.link === '/community' ? '进入讨论社区 →' : card.link === '#footer' ? '扫码加入交流群 ↓' : '浏览全部技术文章 →'}
+                    {card.link === '/community' ? hpConfig.communityCardCtas.community : card.link === '#footer' ? hpConfig.communityCardCtas.footer : hpConfig.communityCardCtas.articles}
                   </span>
                 </Link>
               );
@@ -441,7 +441,7 @@ export default async function HomePage() {
 
           {/* 工程师工具箱 — CMS-managed tool cards */}
           <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 28, border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, textAlign: 'center' }}>工程师实战工具箱</h4>
+            <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, textAlign: 'center' }}>{hpConfig.toolboxTitle}</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
               {hpConfig.toolCards.map((card, i) => (
                 <Link key={i} href={card.link} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>

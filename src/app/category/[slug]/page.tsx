@@ -2,10 +2,14 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CategoryPage({ params }: { params: { slug: string } }) {
+  const config = await getSiteGlobalConfig();
+  const cat = config.category;
+
   const category = await prisma.category.findUnique({
     where: { slug: params.slug },
     include: { _count: { select: { posts: true } } },
@@ -16,10 +20,10 @@ export default async function CategoryPage({ params }: { params: { slug: string 
       <>
         <Header />
         <div className="container" style={{ paddingTop: 120, paddingBottom: 60, minHeight: '60vh', textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: 16 }}>📂</div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 8 }}>分类不存在</h1>
-          <p style={{ color: '#6B7280', marginBottom: 24 }}>您访问的分类不存在或已被删除</p>
-          <Link href="/" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600 }}>← 返回首页</Link>
+          <div style={{ fontSize: '3rem', marginBottom: 16 }}>{cat.notFoundIcon}</div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 8 }}>{cat.notFoundTitle}</h1>
+          <p style={{ color: '#6B7280', marginBottom: 24 }}>{cat.notFoundDesc}</p>
+          <Link href="/" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600 }}>{cat.backToHome}</Link>
         </div>
         <Footer />
       </>
@@ -43,9 +47,9 @@ export default async function CategoryPage({ params }: { params: { slug: string 
       <div className="container" style={{ paddingTop: 100, paddingBottom: 60 }}>
         {/* Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: '.85rem', color: '#9CA3AF' }}>
-          <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>首页</Link>
+          <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>{cat.breadcrumbHome}</Link>
           <span>/</span>
-          <Link href="/#science" style={{ color: '#6B7280', textDecoration: 'none' }}>硬核肉品科学</Link>
+          <Link href="/#science" style={{ color: '#6B7280', textDecoration: 'none' }}>{cat.breadcrumbScience}</Link>
           <span>/</span>
           <span style={{ color: '#1E3A8A', fontWeight: 600 }}>{category.name}</span>
         </div>
@@ -56,29 +60,29 @@ export default async function CategoryPage({ params }: { params: { slug: string 
             <span style={{ fontSize: '1.8rem' }}>{category.icon === 'folder' ? '📂' : category.icon}</span>
             <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>{category.name}</h1>
           </div>
-          <p style={{ fontSize: '.9rem', opacity: .8, margin: 0 }}>共 {posts.length} 篇文章 · 持续更新中</p>
+          <p style={{ fontSize: '.9rem', opacity: .8, margin: 0 }}>{cat.postCountText} {posts.length} 篇文章 · 持续更新中</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 32 }}>
           {/* Category Sidebar */}
           <div style={{ position: 'sticky', top: 100, alignSelf: 'start' }}>
-            <h4 style={{ fontSize: '.85rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 16 }}>📂 品类导航</h4>
+            <h4 style={{ fontSize: '.85rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 16 }}>{cat.navTitle}</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {allCategories.map((cat) => (
+              {allCategories.map((c) => (
                 <Link
-                  key={cat.id}
-                  href={`/category/${cat.slug}`}
+                  key={c.id}
+                  href={`/category/${c.slug}`}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8,
-                    fontSize: '.88rem', fontWeight: cat.id === category.id ? 700 : 500,
-                    color: cat.id === category.id ? '#1E3A8A' : '#6B7280',
-                    background: cat.id === category.id ? '#DBEAFE' : 'transparent',
+                    fontSize: '.88rem', fontWeight: c.id === category.id ? 700 : 500,
+                    color: c.id === category.id ? '#1E3A8A' : '#6B7280',
+                    background: c.id === category.id ? '#DBEAFE' : 'transparent',
                     textDecoration: 'none', transition: 'all .15s',
                   }}
                 >
-                  <span style={{ fontSize: '1rem' }}>{cat.icon === 'folder' ? '📂' : cat.icon}</span>
-                  <span style={{ flex: 1 }}>{cat.name}</span>
-                  <span style={{ fontSize: '.78rem', color: '#9CA3AF' }}>{cat._count.posts}</span>
+                  <span style={{ fontSize: '1rem' }}>{c.icon === 'folder' ? '📂' : c.icon}</span>
+                  <span style={{ flex: 1 }}>{c.name}</span>
+                  <span style={{ fontSize: '.78rem', color: '#9CA3AF' }}>{c._count.posts}</span>
                 </Link>
               ))}
             </div>
@@ -103,7 +107,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
                         {post.tags.split(',')[0] || category.name}
                       </span>
                       <span style={{ fontSize: '.78rem', color: '#9CA3AF' }}>
-                        {new Date(post.createdAt).toISOString().slice(0, 10)} · 👁️ {post.views.toLocaleString()} 阅读
+                        {new Date(post.createdAt).toISOString().slice(0, 10)} · 👁️ {post.views.toLocaleString()} {cat.readText}
                       </span>
                     </div>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: 8, color: '#1F2937' }}>{post.title}</h3>
@@ -116,10 +120,10 @@ export default async function CategoryPage({ params }: { params: { slug: string 
               </div>
             ) : (
               <div style={{ background: '#fff', borderRadius: 12, padding: '60px 40px', textAlign: 'center', border: '1px solid #F3F4F6' }}>
-                <div style={{ fontSize: '3rem', marginBottom: 16 }}>📝</div>
-                <p style={{ fontSize: '1rem', color: '#6B7280', marginBottom: 8 }}>该分类下暂无文章</p>
-                <p style={{ fontSize: '.85rem', color: '#9CA3AF', marginBottom: 20 }}>管理员可在后台 CMS 发布文章并选择此分类</p>
-                <Link href="/admin/posts/new" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600 }}>去发布文章 →</Link>
+                <div style={{ fontSize: '3rem', marginBottom: 16 }}>{cat.emptyIcon}</div>
+                <p style={{ fontSize: '1rem', color: '#6B7280', marginBottom: 8 }}>{cat.emptyTitle}</p>
+                <p style={{ fontSize: '.85rem', color: '#9CA3AF', marginBottom: 20 }}>{cat.emptyDesc}</p>
+                <Link href="/admin/posts/new" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600 }}>{cat.emptyCta}</Link>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { getSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,9 @@ export default async function ArticlePage({ params }: { params: { slug: string }
     where: { id: post.id },
     data: { views: { increment: 1 } },
   });
+
+  const config = await getSiteGlobalConfig();
+  const ac = config.article;
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://meattech-pro.vercel.app';
   const isQA = post.slug.startsWith('qa-');
@@ -55,7 +59,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '首页', item: baseUrl },
+      { '@type': 'ListItem', position: 1, name: ac.breadcrumbHome, item: baseUrl },
       { '@type': 'ListItem', position: 2, name: post.category.name, item: `${baseUrl}/category/${post.category.slug}` },
       { '@type': 'ListItem', position: 3, name: post.title, item: `${baseUrl}/article/${post.slug}` },
     ],
@@ -66,7 +70,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
       <Header />
       <article style={{ maxWidth: 800, margin: '0 auto', padding: '48px 24px' }}>
         <nav style={{ marginBottom: '16px', fontSize: '.85rem', color: '#9CA3AF' }}>
-          <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>首页</Link>
+          <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>{ac.breadcrumbHome}</Link>
           <span style={{ margin: '0 6px' }}>/</span>
           <Link href={`/category/${post.category.slug}`} style={{ color: '#6B7280', textDecoration: 'none' }}>{post.category.name}</Link>
           <span style={{ margin: '0 6px' }}>/</span>
@@ -82,12 +86,12 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <div style={{ display: 'flex', gap: '16px', fontSize: '.85rem', color: '#9CA3AF', marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E5E7EB' }}>
           <span>👨‍🔬 {post.author}</span>
           <span>📅 {new Date(post.createdAt).toISOString().slice(0, 10)}</span>
-          <span>👁️ {post.views.toLocaleString()} 阅读</span>
+          <span>👁️ {post.views.toLocaleString()} {ac.readText}</span>
         </div>
         <div className="article-content" dangerouslySetInnerHTML={{ __html: post.content }} style={{ lineHeight: 1.8, fontSize: '1rem' }} />
         <div style={{ marginTop: '48px', padding: '24px', background: '#F3F4F6', borderRadius: '12px', textAlign: 'center' }}>
-          <p style={{ color: '#6B7280', fontSize: '.9rem' }}>这篇技术文章对您有帮助吗？</p>
-          <Link href="/booking" style={{ display: 'inline-block', marginTop: '12px', background: 'linear-gradient(135deg, #F97316, #DC2626)', color: '#fff', padding: '10px 28px', borderRadius: '20px', fontWeight: 600, fontSize: '.9rem' }}>预约中试线验证工艺 →</Link>
+          <p style={{ color: '#6B7280', fontSize: '.9rem' }}>{ac.helpfulText}</p>
+          <Link href="/booking" style={{ display: 'inline-block', marginTop: '12px', background: 'linear-gradient(135deg, #F97316, #DC2626)', color: '#fff', padding: '10px 28px', borderRadius: '20px', fontWeight: 600, fontSize: '.9rem' }}>{ac.ctaBtn}</Link>
         </div>
       </article>
       <Footer />

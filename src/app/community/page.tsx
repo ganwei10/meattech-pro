@@ -88,17 +88,17 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                 type="text"
                 name="q"
                 defaultValue={q}
-                placeholder="搜索问题、关键词……"
+                placeholder={cc.searchPlaceholder}
                 style={{ flex: 1, padding: '10px 16px', border: '1px solid #E5E7EB', borderRadius: 8, fontSize: '.9rem', outline: 'none' }}
               />
-              <button type="submit" style={{ padding: '10px 24px', background: '#1E3A8A', color: '#fff', border: 'none', borderRadius: 8, fontSize: '.9rem', fontWeight: 600, cursor: 'pointer' }}>搜索</button>
+              <button type="submit" style={{ padding: '10px 24px', background: '#1E3A8A', color: '#fff', border: 'none', borderRadius: 8, fontSize: '.9rem', fontWeight: 600, cursor: 'pointer' }}>{cc.searchBtnText}</button>
             </form>
           </div>
 
           {/* Tag filter */}
           {allTags.length > 0 && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-              <Link href="/community" style={{ padding: '4px 14px', borderRadius: 16, fontSize: '.82rem', fontWeight: 500, textDecoration: 'none', background: !tag ? '#1E3A8A' : '#fff', color: !tag ? '#fff' : '#374151', border: '1px solid #E5E7EB' }}>全部</Link>
+              <Link href="/community" style={{ padding: '4px 14px', borderRadius: 16, fontSize: '.82rem', fontWeight: 500, textDecoration: 'none', background: !tag ? '#1E3A8A' : '#fff', color: !tag ? '#fff' : '#374151', border: '1px solid #E5E7EB' }}>{cc.allTagText}</Link>
               {allTags.map(t => (
                 <Link key={t} href={`/community?tag=${encodeURIComponent(t)}`} style={{ padding: '4px 14px', borderRadius: 16, fontSize: '.82rem', fontWeight: 500, textDecoration: 'none', background: tag === t ? '#1E3A8A' : '#fff', color: tag === t ? '#fff' : '#374151', border: '1px solid #E5E7EB' }}>{t}</Link>
               ))}
@@ -122,7 +122,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                       <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: '.78rem', color: '#9CA3AF' }}>
                         <span>👨‍🔬 {post.author}</span>
                         <span>📅 {new Date(post.createdAt).toISOString().slice(0, 10)}</span>
-                        <span>👁️ {post.views.toLocaleString()} 阅读</span>
+                        <span>👁️ {post.views.toLocaleString()} {cc.readText}</span>
                       </div>
                     </div>
                     <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 12, background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>💬</div>
@@ -132,10 +132,10 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 12 }}>
-              <div style={{ fontSize: '3rem', marginBottom: 16 }}>💬</div>
-              <p style={{ fontSize: '1rem', color: '#6B7280', marginBottom: 8 }}>还没有人提问，做第一个提问的人吧！</p>
-              <p style={{ fontSize: '.85rem', color: '#9CA3AF', marginBottom: 24 }}>无论是工艺难题、配方问题还是设备故障，都可以在这里发帖求助</p>
-              <Link href="/community/ask" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 28px', borderRadius: 8, background: '#1E3A8A', color: '#fff', fontSize: '.9rem', fontWeight: 600, textDecoration: 'none' }}>✏️ 我要提问</Link>
+              <div style={{ fontSize: '3rem', marginBottom: 16 }}>{cc.emptyState.icon}</div>
+              <p style={{ fontSize: '1rem', color: '#6B7280', marginBottom: 8 }}>{cc.emptyState.title}</p>
+              <p style={{ fontSize: '.85rem', color: '#9CA3AF', marginBottom: 24 }}>{cc.emptyState.desc}</p>
+              <Link href="/community/ask" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 28px', borderRadius: 8, background: '#1E3A8A', color: '#fff', fontSize: '.9rem', fontWeight: 600, textDecoration: 'none' }}>{cc.emptyState.btnText}</Link>
             </div>
           )}
         </div>
