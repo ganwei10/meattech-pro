@@ -806,6 +806,11 @@ export async function GET() {
         industryIcon: '⚙️', industryTitle: '工业4.0', industryBadge: '设备选型与原辅料应用指南',
         industryIntro: '拒绝硬广告，只看辅料与设备在实际生产中的"应用案例（Case Study）"',
       }) },
+      { key: 'homepage_reverse', value: JSON.stringify([
+        { title: '山姆某款爆汁脆皮肠', category: '低温调理肉', difficulty: '灌装致密性、蒸煮曲线控制、脆皮成型温度窗口窄', link: '/product/1', icon: '🥓', tags: '山姆,脆皮肠,逆向' },
+        { title: '盒马气调保鲜预制菜系列', category: '气调预制菜', difficulty: '气调配比优化、货架期延长、微生物控制', link: '/product/2', icon: '🍳', tags: '盒马,气调,预制菜' },
+        { title: '某品牌低盐健康香肠', category: '休闲及其他', difficulty: '减盐后的质构保持、保水性下降、风味平衡', link: '/product/3', icon: '🌶️', tags: '低盐,健康,香肠' },
+      ]) },
     ];
     for (const s of homepageSettings) {
       await prisma.$executeRawUnsafe(

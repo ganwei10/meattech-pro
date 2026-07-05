@@ -48,10 +48,15 @@ interface SectionsConfig {
   industryIntro: string;
 }
 
+interface ReverseItem {
+  title: string; category: string; difficulty: string; link: string; icon: string; tags?: string;
+}
+
 export default function HomepageAdminPage() {
-  const [activeTab, setActiveTab] = useState<'carousel' | 'industry' | 'pilot' | 'footer' | 'sections'>('carousel');
+  const [activeTab, setActiveTab] = useState<'carousel' | 'industry' | 'pilot' | 'footer' | 'sections' | 'reverse'>('carousel');
   const [carousel, setCarousel] = useState<CarouselItem[]>([]);
   const [industry, setIndustry] = useState<IndustryItem[]>([]);
+  const [reverse, setReverse] = useState<ReverseItem[]>([]);
   const [footer, setFooter] = useState<FooterConfig>({ title: '', subtitle: '', groups: [] });
   const [sections, setSections] = useState<SectionsConfig>({
     heroBadge: '🥩 肉制品研发与智能中试平台',
@@ -98,6 +103,7 @@ export default function HomepageAdminPage() {
       const data = await res.json();
       setCarousel(data.carousel || []);
       setIndustry(data.industry || []);
+      setReverse(data.reverse || []);
       setFooter(data.footer || { title: '', subtitle: '', groups: [] });
       if (data.pilot) setPilot(data.pilot);
       if (data.sections) setSections(data.sections);
@@ -150,7 +156,16 @@ export default function HomepageAdminPage() {
     setSaving(false);
   };
 
-  const bgOptions = ['carousel-bg-1', 'carousel-bg-2', 'carousel-bg-3'];
+  const saveReverse = async () => {
+    setSaving(true); setMessage('');
+    try {
+      const res = await fetch('/api/admin/homepage', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reverse }) });
+      if (res.ok) setMessage('✅ 货架直通车间配置已保存'); else setMessage('❌ 保存失败');
+    } catch { setMessage('❌ 保存失败'); }
+    setSaving(false);
+  };
+
+  const bgOptions = ['carousel-bg-1', 'carousel-bg-2', 'carousel-bg-3', 'carousel-bg-4'];
   const iconOptions = ['🔬', '⚙️', '📦', '🏭', '🧪', '📊', '🥩', '🍳', '🌶️', '❄️', '🎓', '🗺️'];
   const modelIconOptions = ['🎓', '🏭', '🧪', '🔬', '⚙️', '📦', '📊', '🥩', '🍳', '🌶️', '❄️', '🗺️'];
 
@@ -176,6 +191,7 @@ export default function HomepageAdminPage() {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
         <button onClick={() => setActiveTab('sections')} style={tabBtnStyle(activeTab === 'sections')}>📝 首页文案</button>
+        <button onClick={() => setActiveTab('reverse')} style={tabBtnStyle(activeTab === 'reverse')}>📌 货架直通</button>
         <button onClick={() => setActiveTab('carousel')} style={tabBtnStyle(activeTab === 'carousel')}>🎠 轮播图管理</button>
         <button onClick={() => setActiveTab('pilot')} style={tabBtnStyle(activeTab === 'pilot')}>🏭 中试中心</button>
         <button onClick={() => setActiveTab('industry')} style={tabBtnStyle(activeTab === 'industry')}>⚙️ 工业4.0栏目</button>
@@ -370,6 +386,52 @@ export default function HomepageAdminPage() {
           </div>
           <div style={{ marginTop: 16, padding: 16, background: '#FEF3C7', borderRadius: 8, fontSize: '.85rem', color: '#92400E' }}>
             💡 提示：中试机构的具体数据请在「产线管理」页面编辑。此处仅管理首页中试中心板块的展示文案和合作模式卡片。
+          </div>
+        </div>
+      )}
+
+      {/* 货架直通车间管理 */}
+      {activeTab === 'reverse' && (
+        <div>
+          <div style={{ ...cardStyle, background: '#FEF3C7', borderLeft: '4px solid #F59E0B' }}>
+            <p style={{ fontSize: '.85rem', color: '#92400E', margin: 0 }}>
+              💡 此处管理的卡片会显示在首页"货架直通车间"板块。数据库中的产品会自动追加在自定义卡片之后。
+              如需管理产品库，请前往「商超爆款」页面。
+            </p>
+          </div>
+          {reverse.map((item, i) => (
+            <div key={i} style={cardStyle}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>逆向研发卡片 #{i + 1}</h3>
+                <button onClick={() => setReverse(reverse.filter((_, idx) => idx !== i))} style={btnDelStyle}>删除</button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 12, marginBottom: 12 }}>
+                <div>
+                  <label style={labelStyle}>图标</label>
+                  <input type="text" value={item.icon} onChange={e => { const arr = [...reverse]; arr[i] = { ...item, icon: e.target.value }; setReverse(arr); }} style={inputStyle} placeholder="🍖" />
+                </div>
+                <div>
+                  <label style={labelStyle}>标题</label>
+                  <input type="text" value={item.title} onChange={e => { const arr = [...reverse]; arr[i] = { ...item, title: e.target.value }; setReverse(arr); }} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>分类标签</label>
+                  <input type="text" value={item.category} onChange={e => { const arr = [...reverse]; arr[i] = { ...item, category: e.target.value }; setReverse(arr); }} style={inputStyle} placeholder="如：气调预制菜" />
+                </div>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label style={labelStyle}>关键难点</label>
+                <textarea value={item.difficulty} onChange={e => { const arr = [...reverse]; arr[i] = { ...item, difficulty: e.target.value }; setReverse(arr); }} rows={2} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>跳转链接</label>
+                <input type="text" value={item.link} onChange={e => { const arr = [...reverse]; arr[i] = { ...item, link: e.target.value }; setReverse(arr); }} style={inputStyle} placeholder="/product/1 或外部链接" />
+              </div>
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button onClick={() => setReverse([...reverse, { title: '新逆向研发项目', category: '气调预制菜', difficulty: '关键工艺难点描述', link: '/product/1', icon: '🍖' }])} style={btnAddStyle}>＋ 添加卡片</button>
+            <button onClick={saveReverse} disabled={saving} style={btnSaveStyle}>{saving ? '保存中...' : '💾 保存货架直通配置'}</button>
           </div>
         </div>
       )}

@@ -8,7 +8,7 @@ import HomePageCarousel from '@/components/HomePageCarousel';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting, footerSetting, pilotSetting, sectionsSetting] = await Promise.all([
+  const [featuredPosts, allPosts, categories, products, carouselSetting, industrySetting, footerSetting, pilotSetting, sectionsSetting, reverseSetting] = await Promise.all([
     prisma.post.findMany({ where: { status: 'PUBLISHED', featured: true }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 3 }),
     prisma.post.findMany({ where: { status: 'PUBLISHED' }, include: { category: true }, orderBy: { createdAt: 'desc' }, take: 6 }),
     prisma.category.findMany({ orderBy: { order: 'asc' }, include: { _count: { select: { posts: true } } } }),
@@ -18,6 +18,7 @@ export default async function HomePage() {
     prisma.setting.findUnique({ where: { key: 'homepage_footer' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_pilot' } }),
     prisma.setting.findUnique({ where: { key: 'homepage_sections' } }),
+    prisma.setting.findUnique({ where: { key: 'homepage_reverse' } }),
   ]);
   // Safe PilotLine query (may fallback to SELECT * if DB not migrated yet)
   const pilotLines = await safeFindPilotLines('desc');
@@ -33,32 +34,7 @@ export default async function HomePage() {
       { tag: '中试产线动态', title: '华南区液氮速冻隧道产线开放预约', desc: '-196液氮速冻隧道，适用于预制菜速冻工艺验证，本周新增3个档期，先到先得', bg: 'carousel-bg-3', btn: '立即查看档期并预约', link: '/booking' },
     ];
   }
-  // Fix known bad carousel links from older seed data
-  carouselItems = carouselItems.map((item: any) => {
-    if (item.link === '/#reverse' && products[0]) {
-      return { ...item, link: `/product/${products[0].id}` };
-    }
-    if (item.link === '/tool/pilot-map') {
-      return { ...item, link: '/booking' };
-    }
-    return item;
-  });
-
-  // Add platform highlight slide at the beginning
-  carouselItems.unshift({
-    tag: '平台介绍',
-    title: '肉制品研发与智能中试平台',
-    desc: '从深度技术长文到中试产线预约，从工艺问答到同行交流——全链路服务肉制品研发，赋能每一位肉品工艺工程师',
-    bg: 'carousel-bg-4',
-    btn: '了解平台全部功能',
-    link: '/tool/pilot-map',
-  });
-
-  // Add featured post as carousel item if available
-  const carouselPost = featuredPosts[0] || allPosts[0];
-  if (carouselPost) {
-    carouselItems.splice(2, 0, { tag: '技术前沿', title: carouselPost.title.slice(0, 20) + '...', desc: carouselPost.excerpt.slice(0, 60) + '...', bg: 'carousel-bg-2', btn: '阅读完整技术报告', link: `/article/${carouselPost.slug}` });
-  }
+  // Carousel items are fully CMS-managed — no hardcoded additions or modifications
 
   // Split posts for different sections
   const sciencePosts = allPosts.slice(0, 3);
@@ -168,6 +144,14 @@ export default async function HomePage() {
     }
   } catch { /* defaults */ }
 
+  // Parse reverse section items (CMS-managed "货架直通车间" cards)
+  let reverseItems: { title: string; category: string; difficulty: string; link: string; icon: string; tags?: string }[] = [];
+  try {
+    if (reverseSetting) {
+      reverseItems = JSON.parse(reverseSetting.value);
+    }
+  } catch { /* defaults */ }
+
   // Group pilot lines by region for multi-region display
   const regionOrder = ['华南', '华东', '华北', '华中', '西南', '东北', '其他'];
   const linesByRegion: Record<string, typeof pilotLines> = {};
@@ -234,6 +218,24 @@ export default async function HomePage() {
           </div>
           <p className="section-intro">{sectionsConfig.reverseIntro}</p>
           <div className="reverse-grid">
+            {/* CMS-managed custom items first */}
+            {reverseItems.map((item, i) => (
+              <Link key={`rev-cms-${i}`} href={item.link || '/#reverse'} className="reverse-card">
+                <div className={`reverse-card-banner ${banners[i % 3]}`}>
+                  <span className="cat-tag">{item.category}</span>
+                  {item.icon || '🍖'}
+                </div>
+                <div className="reverse-card-body">
+                  <h4>{item.title}</h4>
+                  <div className="difficulty-box">
+                    <div className="label">⚡ 关键难点</div>
+                    <div className="text">{item.difficulty}</div>
+                  </div>
+                  <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>查看逆向工艺报告 →</span>
+                </div>
+              </Link>
+            ))}
+            {/* Then product database items */}
             {products.map((p, i) => (
               <Link key={p.id} href={`/product/${p.id}`} className="reverse-card">
                 <div className={`reverse-card-banner ${bannersMap[p.category] || banners[i % 3]}`}>

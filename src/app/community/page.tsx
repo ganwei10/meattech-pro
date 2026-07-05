@@ -40,6 +40,22 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
   posts.forEach(p => p.tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => tagSet.add(t)));
   const allTags: string[] = Array.from(tagSet).slice(0, 20);
 
+  // Build FAQ Schema for AEO (top 10 Q&A)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://meattech-pro.vercel.app';
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: posts.slice(0, 10).map(p => ({
+      '@type': 'Question',
+      name: p.title,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: p.excerpt,
+        url: `${baseUrl}/article/${p.slug}`,
+      },
+    })),
+  };
+
   return (
     <>
       <Header />
@@ -120,6 +136,10 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
         </div>
       </section>
       <Footer />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
     </>
   );
 }

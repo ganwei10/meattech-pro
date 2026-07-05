@@ -224,6 +224,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             textDecoration: 'none', display: 'block', marginTop: 4,
           }}>⚙️ 系统设置</Link>
 
+          {/* AI 助手 */}
+          <Link href="/admin/ai-assistant" onClick={() => setPathname('/admin/ai-assistant')} style={{
+            padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88,
+            background: isActive('/admin/ai-assistant') ? 'rgba(255,255,255,0.15)' : 'transparent',
+            textDecoration: 'none', display: 'block', marginTop: 4,
+          }}>🤖 AI 助手</Link>
+
           <Link href="/" style={{ padding: '10px 12px', borderRadius: 8, fontSize: '.9rem', color: '#fff', opacity: .88, marginTop: 'auto', textDecoration: 'none', display: 'block' }}>🌐 返回前台</Link>
         </nav>
       </aside>

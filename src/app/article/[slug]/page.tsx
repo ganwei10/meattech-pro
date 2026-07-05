@@ -18,11 +18,60 @@ export default async function ArticlePage({ params }: { params: { slug: string }
     data: { views: { increment: 1 } },
   });
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://meattech-pro.vercel.app';
+  const isQA = post.slug.startsWith('qa-');
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': isQA ? 'FAQPage' : 'TechArticle',
+    headline: post.title,
+    description: post.excerpt,
+    author: { '@type': 'Person', name: post.author },
+    datePublished: post.createdAt.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    url: `${baseUrl}/article/${post.slug}`,
+    articleSection: post.category.name,
+    keywords: post.tags,
+    inLanguage: 'zh-CN',
+    ...(isQA ? {
+      mainEntity: [{
+        '@type': 'Question',
+        name: post.title,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: post.excerpt,
+        },
+      }],
+    } : {
+      publisher: {
+        '@type': 'Organization',
+        name: 'MeatTech Pro',
+        url: baseUrl,
+      },
+    }),
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '首页', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: post.category.name, item: `${baseUrl}/category/${post.category.slug}` },
+      { '@type': 'ListItem', position: 3, name: post.title, item: `${baseUrl}/article/${post.slug}` },
+    ],
+  };
+
   return (
     <>
       <Header />
       <article style={{ maxWidth: 800, margin: '0 auto', padding: '48px 24px' }}>
-        <Link href="/" style={{ color: '#1E3A8A', fontSize: '.9rem', fontWeight: 600, marginBottom: '16px', display: 'inline-block' }}>← 返回首页</Link>
+        <nav style={{ marginBottom: '16px', fontSize: '.85rem', color: '#9CA3AF' }}>
+          <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>首页</Link>
+          <span style={{ margin: '0 6px' }}>/</span>
+          <Link href={`/category/${post.category.slug}`} style={{ color: '#6B7280', textDecoration: 'none' }}>{post.category.name}</Link>
+          <span style={{ margin: '0 6px' }}>/</span>
+          <span style={{ color: '#1E3A8A' }}>{post.title.slice(0, 30)}{post.title.length > 30 ? '...' : ''}</span>
+        </nav>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
           <span style={{ background: '#1E3A8A', color: '#fff', padding: '3px 10px', borderRadius: '4px', fontSize: '.75rem', fontWeight: 600 }}>{post.category.name}</span>
           {post.tags.split(',').filter(Boolean).map((tag, i) => (
@@ -42,6 +91,14 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         </div>
       </article>
       <Footer />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
     </>
   );
 }
