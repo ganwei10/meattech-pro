@@ -397,18 +397,16 @@ export default async function HomePage() {
             {/* Community cards — CMS-managed */}
             {hpConfig.communityCards.map((card, i) => {
               const isHighlight = card.highlight;
-              return (
-                <Link
-                  key={i}
-                  href={card.link}
-                  style={{
-                    background: isHighlight ? 'rgba(252,211,77,0.12)' : 'rgba(255,255,255,0.1)',
-                    borderRadius: 16,
-                    padding: 28,
-                    textDecoration: 'none',
-                    border: isHighlight ? '2px solid rgba(252,211,77,0.4)' : '1px solid rgba(255,255,255,0.15)',
-                  }}
-                >
+              const isHashLink = card.link.startsWith('#');
+              const cardStyle = {
+                background: isHighlight ? 'rgba(252,211,77,0.12)' : 'rgba(255,255,255,0.1)',
+                borderRadius: 16,
+                padding: 28,
+                textDecoration: 'none',
+                border: isHighlight ? '2px solid rgba(252,211,77,0.4)' : '1px solid rgba(255,255,255,0.15)',
+              };
+              const cardContent = (
+                <>
                   {isHighlight ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <span style={{ fontSize: '2.5rem' }}>{card.icon}</span>
@@ -434,7 +432,12 @@ export default async function HomePage() {
                   <span style={{ display: 'block', marginTop: 16, color: '#FCD34D', fontSize: '.85rem', fontWeight: 600 }}>
                     {card.link === '/community' ? hpConfig.communityCardCtas.community : card.link === '#footer' ? hpConfig.communityCardCtas.footer : hpConfig.communityCardCtas.articles}
                   </span>
-                </Link>
+                </>
+              );
+              return isHashLink ? (
+                <a key={i} href={card.link} style={cardStyle}>{cardContent}</a>
+              ) : (
+                <Link key={i} href={card.link} style={cardStyle}>{cardContent}</Link>
               );
             })}
           </div>
