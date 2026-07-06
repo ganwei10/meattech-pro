@@ -64,15 +64,15 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
   return (
     <>
       <Header />
-      <section style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #3730A3 100%)', padding: '60px 0', color: '#fff' }}>
+      <section className="py-10 md:py-14 text-white" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #3730A3 100%)' }}>
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
+          <div className="flex justify-between items-start flex-wrap gap-5">
             <div>
-              <span style={{ display: 'inline-block', padding: '4px 14px', borderRadius: 16, background: 'rgba(255,255,255,0.15)', fontSize: '.82rem', fontWeight: 600, marginBottom: 12 }}>{cc.headerBadge}</span>
-              <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8 }}>{cc.headerTitle}</h1>
-              <p style={{ fontSize: '.95rem', opacity: .7, maxWidth: 600 }}>{cc.headerDesc}</p>
+              <span className="inline-block px-3.5 py-1 rounded-2xl bg-white/15 text-xs md:text-sm font-semibold mb-3">{cc.headerBadge}</span>
+              <h1 className="text-2xl md:text-3xl font-extrabold mb-2">{cc.headerTitle}</h1>
+              <p className="text-sm md:text-base opacity-70 max-w-xl">{cc.headerDesc}</p>
             </div>
-            <Link href="/community/ask" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 10, background: '#FCD34D', color: '#1E3A8A', fontSize: '.95rem', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            <Link href="/community/ask" className="inline-flex items-center gap-2 px-7 py-3 rounded-lg bg-[#FCD34D] text-[#1E3A8A] text-sm font-bold no-underline whitespace-nowrap">
               {cc.askBtnText}
             </Link>
           </div>
@@ -80,10 +80,10 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
       </section>
 
       <section className="section-padding" style={{ background: '#F3F4F6', minHeight: '60vh' }}>
-        <div className="container" style={{ maxWidth: 900 }}>
+        <div className="container max-w-4xl">
           {/* Search bar */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-            <form style={{ flex: 1, display: 'flex', gap: 8 }} action="/community" method="GET">
+          <div className="mb-6">
+            <form className="flex gap-2" action="/community" method="GET">
               <input
                 type="text"
                 name="q"
@@ -97,7 +97,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
 
           {/* Tag filter */}
           {allTags.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+            <div className="flex gap-2 flex-wrap mb-6 overflow-x-auto">
               <Link href="/community" style={{ padding: '4px 14px', borderRadius: 16, fontSize: '.82rem', fontWeight: 500, textDecoration: 'none', background: !tag ? '#1E3A8A' : '#fff', color: !tag ? '#fff' : '#374151', border: '1px solid #E5E7EB' }}>{cc.allTagText}</Link>
               {allTags.map(t => (
                 <Link key={t} href={`/community?tag=${encodeURIComponent(t)}`} style={{ padding: '4px 14px', borderRadius: 16, fontSize: '.82rem', fontWeight: 500, textDecoration: 'none', background: tag === t ? '#1E3A8A' : '#fff', color: tag === t ? '#fff' : '#374151', border: '1px solid #E5E7EB' }}>{t}</Link>
@@ -107,11 +107,11 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
 
           {/* Posts list */}
           {posts.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {posts.map((post) => (
-                <Link key={post.id} href={`/article/${post.slug}`} style={{ display: 'block', background: '#fff', borderRadius: 12, padding: 20, textDecoration: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', transition: 'box-shadow .2s' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-                    <div style={{ flex: 1 }}>
+                <Link key={post.id} href={`/article/${post.slug}`} className="block bg-white rounded-xl p-4 md:p-5 no-underline shadow-sm">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1 min-w-0">
                       <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                         {post.tags.split(',').filter(Boolean).map((t, i) => (
                           <span key={i} style={{ fontSize: '.72rem', padding: '2px 10px', borderRadius: 12, background: '#FEF3C7', color: '#92400E', fontWeight: 500 }}>{t.trim()}</span>

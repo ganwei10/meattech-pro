@@ -128,60 +128,57 @@ export default function DashboardPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F9FAFB' }}>
       {/* 顶部 */}
-      <div style={{ background: '#FFF', borderBottom: '1px solid #E5E7EB', padding: '16px 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link href="/" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1E3A8A', textDecoration: 'none' }}>🥩 MeatTech Pro</Link>
-            <span style={{ color: '#D1D5DB' }}>|</span>
-            <span style={{ fontSize: '.95rem', fontWeight: 600, color: '#374151' }}>用户中心</span>
+      <div className="bg-white border-b border-[#E5E7EB] py-4">
+        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-lg md:text-xl font-extrabold text-[#1E3A8A] no-underline">🥩 MeatTech Pro</Link>
+            <span className="text-[#D1D5DB]">|</span>
+            <span className="text-sm md:text-base font-semibold text-[#374151]">用户中心</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: '.9rem', color: '#6B7280' }}>
-            <span>{user?.name || user?.email}</span>
-            <button onClick={() => { document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; router.push('/'); }} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: '.9rem' }}>退出</button>
+          <div className="flex items-center gap-3 md:gap-4 text-xs md:text-sm text-[#6B7280]">
+            <span className="hidden sm:inline">{user?.name || user?.email}</span>
+            <button onClick={() => { document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; router.push('/'); }} className="bg-none border-none text-[#EF4444] cursor-pointer text-xs md:text-sm">退出</button>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
+      <div className="max-w-5xl mx-auto px-4 py-8 md:py-10">
         {/* 统计卡片 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-          <div style={{ background: '#FFF', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>我的预约</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E3A8A' }}>{bookings.length}</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 md:p-5 shadow-sm">
+            <div className="text-xs md:text-sm text-[#6B7280] mb-1">我的预约</div>
+            <div className="text-2xl md:text-3xl font-extrabold text-[#1E3A8A]">{bookings.length}</div>
           </div>
-          <div style={{ background: '#FFF', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>我的账单</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E3A8A' }}>{bills.length}</div>
+          <div className="bg-white rounded-xl p-4 md:p-5 shadow-sm">
+            <div className="text-xs md:text-sm text-[#6B7280] mb-1">我的账单</div>
+            <div className="text-2xl md:text-3xl font-extrabold text-[#1E3A8A]">{bills.length}</div>
           </div>
-          <div style={{ background: '#FFF', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>待支付</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#D97706' }}>{bills.filter(b => b.status === 'PENDING').length}</div>
+          <div className="bg-white rounded-xl p-4 md:p-5 shadow-sm">
+            <div className="text-xs md:text-sm text-[#6B7280] mb-1">待支付</div>
+            <div className="text-2xl md:text-3xl font-extrabold text-[#D97706]">{bills.filter(b => b.status === 'PENDING').length}</div>
           </div>
-          <div style={{ background: '#FFF', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: '.85rem', color: '#6B7280', marginBottom: 4 }}>我的收藏</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E3A8A' }}>{favorites.length}</div>
+          <div className="bg-white rounded-xl p-4 md:p-5 shadow-sm">
+            <div className="text-xs md:text-sm text-[#6B7280] mb-1">我的收藏</div>
+            <div className="text-2xl md:text-3xl font-extrabold text-[#1E3A8A]">{favorites.length}</div>
           </div>
         </div>
 
-        {/* Tab 切换 */}
-        <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '2px solid #E5E7EB' }}>
-          <button onClick={() => setActiveTab('bookings')} style={{
-            padding: '12px 24px', background: 'none', border: 'none', fontSize: '.95rem', fontWeight: activeTab === 'bookings' ? 700 : 400,
+        {/* Tab 切换 — horizontal scroll on mobile */}
+        <div className="flex gap-0 mb-6 border-b-2 border-[#E5E7EB] overflow-x-auto">
+          <button onClick={() => setActiveTab('bookings')} className="px-6 py-3 bg-none border-none text-sm font-bold whitespace-nowrap cursor-pointer" style={{
             color: activeTab === 'bookings' ? '#1E3A8A' : '#6B7280',
             borderBottom: activeTab === 'bookings' ? '2px solid #1E3A8A' : '2px solid transparent',
-            cursor: 'pointer', marginTop: -2,
+            marginTop: -2, flexShrink: 0,
           }}>📅 我的预约</button>
-          <button onClick={() => setActiveTab('bills')} style={{
-            padding: '12px 24px', background: 'none', border: 'none', fontSize: '.95rem', fontWeight: activeTab === 'bills' ? 700 : 400,
+          <button onClick={() => setActiveTab('bills')} className="px-6 py-3 bg-none border-none text-sm font-bold whitespace-nowrap cursor-pointer" style={{
             color: activeTab === 'bills' ? '#1E3A8A' : '#6B7280',
             borderBottom: activeTab === 'bills' ? '2px solid #1E3A8A' : '2px solid transparent',
-            cursor: 'pointer', marginTop: -2,
+            marginTop: -2, flexShrink: 0,
           }}>📄 我的账单</button>
-          <button onClick={() => setActiveTab('favorites')} style={{
-            padding: '12px 24px', background: 'none', border: 'none', fontSize: '.95rem', fontWeight: activeTab === 'favorites' ? 700 : 400,
+          <button onClick={() => setActiveTab('favorites')} className="px-6 py-3 bg-none border-none text-sm font-bold whitespace-nowrap cursor-pointer" style={{
             color: activeTab === 'favorites' ? '#1E3A8A' : '#6B7280',
             borderBottom: activeTab === 'favorites' ? '2px solid #1E3A8A' : '2px solid transparent',
-            cursor: 'pointer', marginTop: -2,
+            marginTop: -2, flexShrink: 0,
           }}>❤️ 我的收藏</button>
         </div>
 
@@ -207,11 +204,11 @@ export default function DashboardPage() {
                           </div>
                           {getStatusBadge(b.status)}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', fontSize: '.85rem', color: '#374151', marginBottom: 12 }}>
-                          <div><span style={{ color: '#9CA3AF' }}>预约人：</span>{b.contactName}</div>
-                          <div><span style={{ color: '#9CA3AF' }}>公司：</span>{b.company}</div>
-                          <div><span style={{ color: '#9CA3AF' }}>期望日期：</span>{b.preferredDate || '待协商'}</div>
-                          <div><span style={{ color: '#9CA3AF' }}>预约时间：</span>{new Date(b.createdAt).toLocaleDateString('zh-CN')}</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2 text-sm text-[#374151] mb-3">
+                          <div><span className="text-[#9CA3AF]">预约人：</span>{b.contactName}</div>
+                          <div><span className="text-[#9CA3AF]">公司：</span>{b.company}</div>
+                          <div><span className="text-[#9CA3AF]">期望日期：</span>{b.preferredDate || '待协商'}</div>
+                          <div><span className="text-[#9CA3AF]">预约时间：</span>{new Date(b.createdAt).toLocaleDateString('zh-CN')}</div>
                         </div>
                         {b.adminNote && (
                           <div style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 8, padding: '8px 12px', fontSize: '.85rem', color: '#0369A1' }}>
@@ -244,11 +241,11 @@ export default function DashboardPage() {
                           </div>
                           {getBillStatusBadge(b.status)}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', fontSize: '.85rem', color: '#374151', marginBottom: 16 }}>
-                          <div><span style={{ color: '#9CA3AF' }}>客户：</span>{b.customerName}</div>
-                          <div><span style={{ color: '#9CA3AF' }}>公司：</span>{b.company}</div>
-                          <div><span style={{ color: '#9CA3AF' }}>产线费用：</span>¥{b.amount.toFixed(2)}</div>
-                          <div><span style={{ color: '#9CA3AF' }}>服务费：</span>¥{b.serviceFee.toFixed(2)}</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2 text-sm text-[#374151] mb-4">
+                          <div><span className="text-[#9CA3AF]">客户：</span>{b.customerName}</div>
+                          <div><span className="text-[#9CA3AF]">公司：</span>{b.company}</div>
+                          <div><span className="text-[#9CA3AF]">产线费用：</span>¥{b.amount.toFixed(2)}</div>
+                          <div><span className="text-[#9CA3AF]">服务费：</span>¥{b.serviceFee.toFixed(2)}</div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#059669' }}>总计：¥{b.totalAmount.toFixed(2)}</div>

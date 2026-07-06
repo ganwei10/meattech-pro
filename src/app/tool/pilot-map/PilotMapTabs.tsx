@@ -58,23 +58,18 @@ export default function PilotMapTabs({ regions, regionMap, typeConfig, cardLabel
 
   return (
     <div>
-      {/* Region tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+      {/* Region tabs — horizontal scroll on mobile */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2" style={{ flexWrap: 'nowrap' }}>
         {regions.map(r => (
           <button
             key={r}
             onClick={() => setActiveRegion(r)}
+            className="px-5 py-2 rounded-full border-none cursor-pointer text-sm font-semibold whitespace-nowrap transition-all"
             style={{
-              padding: '8px 20px',
-              borderRadius: 20,
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '.9rem',
-              fontWeight: 600,
-              transition: 'all .2s',
               background: activeRegion === r ? '#1E3A8A' : '#fff',
               color: activeRegion === r ? '#fff' : '#374151',
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              flexShrink: 0,
             }}
           >
             {r} ({(regionMap[r] || []).length})
@@ -101,20 +96,20 @@ export default function PilotMapTabs({ regions, regionMap, typeConfig, cardLabel
 
 function SectionBlock({ title, config, lines, cardLabels }: { title: string; config: TypeConfigItem; lines: LineData[]; cardLabels: CardLabels }) {
   return (
-    <div style={{ marginBottom: 40 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: config.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>{config.icon}</div>
-        <div>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: config.color, margin: 0 }}>{title}</h2>
-          <p style={{ fontSize: '.85rem', color: '#6B7280', margin: '4px 0 0 0' }}>{config.desc}</p>
+    <div className="mb-8 md:mb-10">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-xl md:text-2xl flex-shrink-0" style={{ background: config.bg }}>{config.icon}</div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg md:text-2xl font-extrabold m-0" style={{ color: config.color }}>{title}</h2>
+          <p className="text-xs md:text-sm text-[#6B7280] m-0 mt-1">{config.desc}</p>
         </div>
         {config.model && (
-          <div style={{ marginLeft: 'auto', background: config.bg, color: config.color, padding: '6px 14px', borderRadius: 20, fontSize: '.8rem', fontWeight: 600 }}>
+          <div className="ml-auto text-xs md:text-sm font-semibold px-3 py-1.5 rounded-full whitespace-nowrap" style={{ background: config.bg, color: config.color }}>
             {config.model}
           </div>
         )}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {lines.map(line => (
           <PilotCard key={line.id} line={line} config={config} cardLabels={cardLabels} />
         ))}

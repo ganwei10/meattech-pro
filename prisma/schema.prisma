@@ -19,6 +19,7 @@ model User {
   lastLogin DateTime? // 最后登录时间
   reviews   Review[]
   favorites Favorite[]
+  notifications Notification[]
 }
 
 model Category {
@@ -207,4 +208,16 @@ model Favorite {
   createdAt  DateTime @default(now())
 
   @@unique([userId, targetType, targetId])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @db.Integer
+  type      String   // BOOKING_CONFIRMED, BOOKING_STATUS_CHANGED, REVIEW_RECEIVED, SYSTEM
+  title     String
+  content   String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }

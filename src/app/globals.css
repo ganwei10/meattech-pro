@@ -32,9 +32,10 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 2px 8px rgba(30,58,138,0.3);
 }
 .header-inner {
-  max-width: 1280px; margin: 0 auto; padding: 0 24px;
-  display: flex; align-items: center; height: 64px; gap: 32px;
+  max-width: 1280px; margin: 0 auto; padding: 0 16px;
+  display: flex; align-items: center; height: 64px; gap: 16px;
 }
+@media(min-width:768px){ .header-inner { padding: 0 24px; gap: 32px; } }
 .logo { display: flex; align-items: center; gap: 8px; font-size: 1.3rem; font-weight: 800; white-space: nowrap; }
 .logo-icon {
   width: 36px; height: 36px;
@@ -193,8 +194,9 @@ img { max-width: 100%; display: block; }
 .qr-grid { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
 .qr-placeholder { width: 110px; height: 110px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 8px; border: 2px dashed rgba(255,255,255,0.2); }
 
-@media(max-width:1024px){ .hero-grid{grid-template-columns:1fr} .reverse-grid{grid-template-columns:1fr 1fr} .science-layout{grid-template-columns:1fr} .pilot-grid{grid-template-columns:1fr} .nav-menu{display:none} .search-box{width:200px} .hero-left{padding-right:0; text-align:center; align-items:center} .hero-cta-row{justify-content:center} .hero-badge{margin:0 auto} }
-@media(max-width:640px){ .hero-slogan{font-size:1.5rem} .reverse-grid{grid-template-columns:1fr} .footer-grid{grid-template-columns:1fr} .search-box{display:none} .container{padding:0 16px} .section-padding{padding:40px 0} .hero-left{text-align:center} .hero-cta-row{justify-content:center} }
+@media(max-width:1024px){ .hero-grid{grid-template-columns:1fr} .reverse-grid{grid-template-columns:1fr 1fr} .science-layout{grid-template-columns:1fr} .pilot-grid{grid-template-columns:1fr} .hero-left{padding-right:0; text-align:center; align-items:center} .hero-cta-row{justify-content:center} .hero-badge{margin:0 auto} }
+@media(max-width:768px){ .reverse-grid{grid-template-columns:1fr} .hero-tools-row{grid-template-columns:1fr} .pilot-grid{grid-template-columns:1fr} .data-panel{gap:12px; display:grid; grid-template-columns:1fr 1fr} .industry-item{flex-direction:column; gap:12px} }
+@media(max-width:640px){ .hero-slogan{font-size:1.5rem} .reverse-grid{grid-template-columns:1fr} .footer-grid{grid-template-columns:1fr} .container{padding:0 16px} .section-padding{padding:40px 0} .hero-left{text-align:center} .hero-cta-row{justify-content:center} .hero-cta{width:100%; justify-content:center} .section-title{font-size:1.25rem} .pilot-title{font-size:1.4rem} .carousel-slides{height:240px} .carousel-slide{padding:20px} .carousel-title{font-size:1.15rem} .carousel-desc{font-size:.85rem} .pilot-card{padding:20px} .section-header{flex-wrap:wrap} }
 
 .article-content h2 { font-size: 1.4rem; font-weight: 700; margin: 24px 0 12px; color: #1F2937; }
 .article-content p { margin-bottom: 16px; color: #374151; }

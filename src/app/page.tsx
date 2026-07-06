@@ -199,8 +199,8 @@ export default async function HomePage() {
             {/* Discussion bar - prominent entry to community */}
             <Link href="/community" className="hero-discussion-bar">
               <span className="pulse-dot"></span>
-              <span style={{ fontSize: '.88rem', fontWeight: 600 }}>{hpConfig.discussionBarText}</span>
-              <span style={{ fontSize: '.82rem', opacity: .75, marginLeft: 'auto' }}>{hpConfig.discussionBarCta}</span>
+              <span className="text-sm font-semibold">{hpConfig.discussionBarText}</span>
+              <span className="text-xs opacity-75 ml-auto hidden sm:inline">{hpConfig.discussionBarCta}</span>
             </Link>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default async function HomePage() {
           </div>
 
           {/* 三类合作模式 (CMS-managed) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {pilotConfig.cooperationModels.map((model, i) => (
               <Link key={i} href="/tool/pilot-map" style={{ background: model.bg, borderRadius: 12, padding: 24, textDecoration: 'none', border: `1px solid ${model.borderColor}`, transition: 'transform .2s' }}>
                 <div style={{ fontSize: '2rem', marginBottom: 8 }}>{model.icon}</div>
@@ -349,8 +349,8 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-          <div style={{ textAlign: 'center', marginTop: '40px' }}>
-            <Link href="/booking" className="btn-book" style={{ display: 'inline-flex' }}>{hpConfig.pilotBtnText}</Link>
+          <div className="text-center mt-8 md:mt-10">
+            <Link href="/booking" className="btn-book inline-flex">{hpConfig.pilotBtnText}</Link>
           </div>
         </div>
       </section>
@@ -358,14 +358,14 @@ export default async function HomePage() {
       {/* 工艺工程师讨论社区 — 强化突出 */}
       <section className="section-padding" id="community" style={{ background: 'linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%)' }}>
         <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <span style={{ display: 'inline-block', padding: '4px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.15)', color: '#FCD34D', fontSize: '.85rem', fontWeight: 600, marginBottom: 16 }}>{sectionsConfig.communityBadge}</span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>{sectionsConfig.communityTitle}</h2>
-            <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', maxWidth: 700, margin: '0 auto' }}>{sectionsConfig.communitySub.replace(/已有.*持续更新中。/, `已有 ${allPosts.length} 篇技术内容沉淀，持续更新中。`)}</p>
+          <div className="text-center mb-8 md:mb-10">
+            <span className="inline-block px-4 py-1 rounded-full bg-white/15 text-[#FCD34D] text-xs md:text-sm font-semibold mb-4">{sectionsConfig.communityBadge}</span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">{sectionsConfig.communityTitle}</h2>
+            <p className="text-sm md:text-base text-white/70 max-w-2xl mx-auto">{sectionsConfig.communitySub.replace(/已有.*持续更新中。/, `已有 ${allPosts.length} 篇技术内容沉淀，持续更新中。`)}</p>
           </div>
 
           {/* 快速提问入口 — 大号CTA */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 40 }}>
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
             <Link href="/community/ask" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', borderRadius: 28, background: '#FCD34D', color: '#1E3A8A', fontSize: '1rem', fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 20px rgba(252,211,77,0.3)' }}>
               {hpConfig.askNowBtn}
             </Link>
@@ -374,7 +374,7 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 40 }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {/* Community cards — CMS-managed */}
             {hpConfig.communityCards.map((card, i) => {
               const isHighlight = card.highlight;
@@ -426,7 +426,7 @@ export default async function HomePage() {
           {/* 工程师工具箱 — CMS-managed tool cards */}
           <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 28, border: '1px solid rgba(255,255,255,0.1)' }}>
             <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, textAlign: 'center' }}>{hpConfig.toolboxTitle}</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {hpConfig.toolCards.map((card, i) => (
                 <Link key={i} href={card.link} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', textDecoration: 'none' }}>
                   <span style={{ fontSize: '1.5rem' }}>{card.icon}</span>
@@ -449,7 +449,7 @@ export default async function HomePage() {
             <span className="section-badge">{sectionsConfig.industryBadge}</span>
           </div>
           <p className="section-intro">{sectionsConfig.industryIntro}</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="flex flex-col gap-5">
             {/* CMS-managed articles */}
             {industryPosts.map((post) => (
               <Link href={`/article/${post.slug}`} key={`post-${post.id}`} className="industry-item">

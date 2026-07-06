@@ -44,40 +44,40 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   return (
     <>
       <Header />
-      <div className="container" style={{ paddingTop: 100, paddingBottom: 60 }}>
+      <div className="container pt-20 md:pt-24 pb-12 md:pb-16">
         {/* Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: '.85rem', color: '#9CA3AF' }}>
-          <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>{cat.breadcrumbHome}</Link>
+        <div className="flex items-center gap-2 mb-6 text-xs md:text-sm text-[#9CA3AF]">
+          <Link href="/" className="text-[#6B7280] no-underline">{cat.breadcrumbHome}</Link>
           <span>/</span>
-          <Link href="/#science" style={{ color: '#6B7280', textDecoration: 'none' }}>{cat.breadcrumbScience}</Link>
+          <Link href="/#science" className="text-[#6B7280] no-underline">{cat.breadcrumbScience}</Link>
           <span>/</span>
-          <span style={{ color: '#1E3A8A', fontWeight: 600 }}>{category.name}</span>
+          <span className="text-[#1E3A8A] font-semibold">{category.name}</span>
         </div>
 
         {/* Category Header */}
-        <div style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)', borderRadius: 16, padding: '32px 36px', marginBottom: 32, color: '#fff' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={{ fontSize: '1.8rem' }}>{category.icon === 'folder' ? '📂' : category.icon}</span>
-            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>{category.name}</h1>
+        <div className="rounded-2xl p-5 md:p-9 mb-8 text-white" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)' }}>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-2xl md:text-3xl">{category.icon === 'folder' ? '📂' : category.icon}</span>
+            <h1 className="text-xl md:text-3xl font-extrabold m-0">{category.name}</h1>
           </div>
-          <p style={{ fontSize: '.9rem', opacity: .8, margin: 0 }}>{cat.postCountText} {posts.length} 篇文章 · 持续更新中</p>
+          <p className="text-sm opacity-80 m-0">{cat.postCountText} {posts.length} 篇文章 · 持续更新中</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 32 }}>
-          {/* Category Sidebar */}
-          <div style={{ position: 'sticky', top: 100, alignSelf: 'start' }}>
-            <h4 style={{ fontSize: '.85rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 16 }}>{cat.navTitle}</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div className="flex flex-col md:grid md:grid-cols-[220px_1fr] gap-6 md:gap-8">
+          {/* Category Sidebar — horizontal scroll on mobile */}
+          <div className="md:sticky md:top-24 md:self-start">
+            <h4 className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wide mb-3 md:mb-4 hidden md:block">{cat.navTitle}</h4>
+            <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
               {allCategories.map((c) => (
                 <Link
                   key={c.id}
                   href={`/category/${c.slug}`}
+                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm whitespace-nowrap md:whitespace-normal no-underline transition-all"
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8,
-                    fontSize: '.88rem', fontWeight: c.id === category.id ? 700 : 500,
+                    fontWeight: c.id === category.id ? 700 : 500,
                     color: c.id === category.id ? '#1E3A8A' : '#6B7280',
                     background: c.id === category.id ? '#DBEAFE' : 'transparent',
-                    textDecoration: 'none', transition: 'all .15s',
+                    flexShrink: 0,
                   }}
                 >
                   <span style={{ fontSize: '1rem' }}>{c.icon === 'folder' ? '📂' : c.icon}</span>
@@ -91,16 +91,12 @@ export default async function CategoryPage({ params }: { params: { slug: string 
           {/* Posts List */}
           <div>
             {posts.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="flex flex-col gap-4">
                 {posts.map((post) => (
                   <Link
                     href={`/article/${post.slug}`}
                     key={post.id}
-                    style={{
-                      display: 'block', background: '#fff', padding: 24, borderRadius: 12,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6',
-                      textDecoration: 'none', transition: 'box-shadow .2s, transform .2s',
-                    }}
+                    className="block bg-white p-5 md:p-6 rounded-xl shadow-sm border border-[#F3F4F6] no-underline"
                   >
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 10 }}>
                       <span style={{ fontSize: '.75rem', background: '#DBEAFE', color: '#1E3A8A', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>

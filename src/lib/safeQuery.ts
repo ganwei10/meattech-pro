@@ -132,3 +132,24 @@ export async function safeFindFavorites(userId: number): Promise<any[]> {
     }
   }
 }
+
+/**
+ * Safe Notifications query - falls back to raw SQL if Prisma query fails
+ */
+export async function safeFindNotifications(userId: number, unreadOnly: boolean = false): Promise<any[]> {
+  try {
+    return await prisma.notification.findMany({
+      where: unreadOnly ? { userId, isRead: false } : { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  } catch {
+    try {
+      const where = unreadOnly
+        ? `"userId" = ${userId} AND "isRead" = false`
+        : `"userId" = ${userId}`;
+      return await prisma.$queryRawUnsafe(`SELECT * FROM "Notification" WHERE ${where} ORDER BY "createdAt" DESC`);
+    } catch {
+      return [];
+    }
+  }
+}

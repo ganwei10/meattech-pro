@@ -12,10 +12,10 @@ export default async function TroubleshootPage() {
   return (
     <>
       <Header />
-      <div className="container" style={{ paddingTop: 100, paddingBottom: 60, minHeight: '80vh', maxWidth: 800 }}>
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1E3A8A', marginBottom: 8 }}>{t.title}</h1>
-          <p style={{ color: '#6B7280', fontSize: '.95rem' }}>{t.subtitle}</p>
+      <div className="container pt-20 md:pt-24 pb-12 md:pb-16 min-h-[80vh] max-w-4xl">
+        <div className="text-center mb-8 md:mb-10">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#1E3A8A] mb-2">{t.title}</h1>
+          <p className="text-[#6B7280] text-sm md:text-base">{t.subtitle}</p>
         </div>
         <TroubleshootEngine />
       </div>

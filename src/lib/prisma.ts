@@ -65,6 +65,40 @@ function createPrismaClient() {
   // Fire migration immediately - it will complete before most queries due to event loop ordering
   migratePilotLine();
   migrateReviewsAndFavorites();
+
+  // Auto-migrate: create Notification table if it doesn't exist
+  const migrateNotifications = async () => {
+    try {
+      await client.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "Notification" (
+          id SERIAL PRIMARY KEY,
+          "userId" INTEGER NOT NULL,
+          type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          "isRead" BOOLEAN NOT NULL DEFAULT false,
+          link TEXT,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      try { await client.$executeRawUnsafe(`ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE ON UPDATE CASCADE`); } catch (e) {}
+    } catch (e) {
+      // Migration failed - will be retried on next request
+    }
+  };
+  migrateNotifications();
+
+  // Auto-migrate: create indexes for search performance
+  const createSearchIndexes = async () => {
+    try {
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Post_title_idx" ON "Post" (title)`);
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Post_content_idx" ON "Post" (content)`);
+    } catch (e) {
+      // Index creation failed - non-critical
+    }
+  };
+  createSearchIndexes();
+
   return client;
 }
 

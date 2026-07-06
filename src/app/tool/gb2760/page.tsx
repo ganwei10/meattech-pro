@@ -12,13 +12,13 @@ export default async function GB2760Page() {
   return (
     <>
       <Header />
-      <div className="container" style={{ paddingTop: 100, paddingBottom: 60, minHeight: '80vh' }}>
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1E3A8A', marginBottom: 8 }}>{t.title}</h1>
-          <p style={{ color: '#6B7280', fontSize: '.95rem' }}>{t.subtitle}</p>
+      <div className="container pt-20 md:pt-24 pb-12 md:pb-16 min-h-[80vh]">
+        <div className="text-center mb-8 md:mb-10">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#1E3A8A] mb-2">{t.title}</h1>
+          <p className="text-[#6B7280] text-sm md:text-base">{t.subtitle}</p>
         </div>
         <GB2760Calculator />
-        <div style={{ marginTop: 40, padding: 20, background: '#FEF3C7', borderRadius: 12, fontSize: '.82rem', color: '#92400E', lineHeight: 1.6 }}>
+        <div className="mt-8 md:mt-10 p-5 bg-[#FEF3C7] rounded-xl text-xs md:text-sm text-[#92400E] leading-relaxed">
           {t.disclaimer}
         </div>
       </div>

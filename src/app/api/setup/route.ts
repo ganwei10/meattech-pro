@@ -190,15 +190,17 @@ export async function GET() {
     logs.push('Seeding admin user...');
     const existingAdmin = await prisma.user.findUnique({ where: { email: 'admin@meattech.pro' } });
     if (!existingAdmin) {
+      const defaultPassword = 'MeatTech@2026!';
       await prisma.user.create({
         data: {
           email: 'admin@meattech.pro',
-          password: bcrypt.hashSync('admin123', 10),
+          password: bcrypt.hashSync(defaultPassword, 10),
           name: '平台管理员',
           role: 'ADMIN',
         },
       });
       logs.push('Admin user created');
+      logs.push('Default admin password: MeatTech@2026! (please change immediately after login)');
     } else {
       logs.push('Admin user already exists');
     }
@@ -785,6 +787,27 @@ export async function GET() {
       logs.push('Favorite table OK');
     } catch (e: any) {
       logs.push('Favorite table already exists or skip');
+    }
+
+    // 15.65 Create Notification table
+    logs.push('Creating Notification table...');
+    try {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "Notification" (
+          id SERIAL PRIMARY KEY,
+          "userId" INTEGER NOT NULL,
+          type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          "isRead" BOOLEAN NOT NULL DEFAULT false,
+          link TEXT,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      try { await prisma.$executeRawUnsafe(`ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE ON UPDATE CASCADE`); } catch (e) {}
+      logs.push('Notification table OK');
+    } catch (e: any) {
+      logs.push('Notification table already exists or skip');
     }
 
     // 15.7 Seed review sample data

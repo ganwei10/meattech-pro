@@ -47,7 +47,7 @@ export default async function Footer() {
         <div style={{ textAlign: 'center' }}>
           <h5 style={{ color: '#fff', fontSize: '.95rem', fontWeight: 700, marginBottom: '8px' }}>{title}</h5>
           {subtitle && <p style={{ fontSize: '.8rem', opacity: .6, marginBottom: '20px' }}>{subtitle}</p>}
-          <div className="qr-grid">
+          <div className="qr-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '16px', justifyItems: 'center' }}>
             {groups.map((group, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 {group.qrcode ? (
@@ -60,10 +60,28 @@ export default async function Footer() {
             ))}
           </div>
         </div>
-        <div style={{ textAlign: 'center', fontSize: '.8rem', opacity: .5, paddingTop: '24px' }}>
-          <p>{fc.copyrightText}</p>
+        <div style={{ textAlign: 'center', paddingTop: '24px' }}>
+          <p style={{ fontSize: '.8rem', opacity: .5 }}>{fc.copyrightText}</p>
+          <div style={{ marginTop: '8px', fontSize: '.75rem', opacity: .5 }}>
+            <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color .2s' }} className="hover:text-white">隐私政策</Link>
+            <span style={{ margin: '0 8px' }}>|</span>
+            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color .2s' }} className="hover:text-white">用户协议</Link>
+          </div>
         </div>
       </div>
+      <style>{`
+        @media (min-width: 640px) {
+          .qr-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (min-width: 768px) {
+          .qr-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 32px !important; }
+        }
+        @media (max-width: 640px) {
+          .footer h5 { font-size: .85rem !important; }
+          .footer p { font-size: .78rem !important; }
+          .footer .qr-placeholder { width: 80px !important; height: 80px !important; font-size: 1.6rem !important; }
+        }
+      `}</style>
     </footer>
   );
 }

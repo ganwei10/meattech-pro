@@ -69,33 +69,33 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   return (
     <>
       <Header />
-      <article style={{ maxWidth: 800, margin: '0 auto', padding: '48px 24px' }}>
-        <nav style={{ marginBottom: '16px', fontSize: '.85rem', color: '#9CA3AF' }}>
-          <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>{ac.breadcrumbHome}</Link>
-          <span style={{ margin: '0 6px' }}>/</span>
-          <Link href={`/category/${post.category.slug}`} style={{ color: '#6B7280', textDecoration: 'none' }}>{post.category.name}</Link>
-          <span style={{ margin: '0 6px' }}>/</span>
-          <span style={{ color: '#1E3A8A' }}>{post.title.slice(0, 30)}{post.title.length > 30 ? '...' : ''}</span>
+      <article className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+        <nav className="mb-4 text-xs md:text-sm text-[#9CA3AF]">
+          <Link href="/" className="text-[#6B7280] no-underline">{ac.breadcrumbHome}</Link>
+          <span className="mx-1.5">/</span>
+          <Link href={`/category/${post.category.slug}`} className="text-[#6B7280] no-underline">{post.category.name}</Link>
+          <span className="mx-1.5">/</span>
+          <span className="text-[#1E3A8A]">{post.title.slice(0, 30)}{post.title.length > 30 ? '...' : ''}</span>
         </nav>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-          <span style={{ background: '#1E3A8A', color: '#fff', padding: '3px 10px', borderRadius: '4px', fontSize: '.75rem', fontWeight: 600 }}>{post.category.name}</span>
+        <div className="flex gap-2.5 mb-4 flex-wrap">
+          <span className="bg-[#1E3A8A] text-white px-2.5 py-1 rounded text-xs font-semibold">{post.category.name}</span>
           {post.tags.split(',').filter(Boolean).map((tag, i) => (
-            <span key={i} style={{ background: '#F3F4F6', color: '#6B7280', padding: '3px 10px', borderRadius: '4px', fontSize: '.75rem' }}>#{tag.trim()}</span>
+            <span key={i} className="bg-[#F3F4F6] text-[#6B7280] px-2.5 py-1 rounded text-xs">#{tag.trim()}</span>
           ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '16px' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1.4, margin: 0 }}>{post.title}</h1>
+        <div className="flex items-center gap-2 mb-4">
+          <h1 className="text-xl md:text-3xl font-extrabold leading-snug m-0">{post.title}</h1>
           <FavoriteButton targetType="ARTICLE" targetId={post.id} />
         </div>
-        <div style={{ display: 'flex', gap: '16px', fontSize: '.85rem', color: '#9CA3AF', marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E5E7EB' }}>
+        <div className="flex flex-wrap gap-4 text-xs md:text-sm text-[#9CA3AF] mb-8 pb-6 border-b border-[#E5E7EB]">
           <span>👨‍🔬 {post.author}</span>
           <span>📅 {new Date(post.createdAt).toISOString().slice(0, 10)}</span>
           <span>👁️ {post.views.toLocaleString()} {ac.readText}</span>
         </div>
         <div className="article-content" dangerouslySetInnerHTML={{ __html: post.content }} style={{ lineHeight: 1.8, fontSize: '1rem' }} />
-        <div style={{ marginTop: '48px', padding: '24px', background: '#F3F4F6', borderRadius: '12px', textAlign: 'center' }}>
-          <p style={{ color: '#6B7280', fontSize: '.9rem' }}>{ac.helpfulText}</p>
-          <Link href="/booking" style={{ display: 'inline-block', marginTop: '12px', background: 'linear-gradient(135deg, #F97316, #DC2626)', color: '#fff', padding: '10px 28px', borderRadius: '20px', fontWeight: 600, fontSize: '.9rem' }}>{ac.ctaBtn}</Link>
+        <div className="mt-8 md:mt-12 p-6 bg-[#F3F4F6] rounded-xl text-center">
+          <p className="text-[#6B7280] text-sm">{ac.helpfulText}</p>
+          <Link href="/booking" className="inline-block mt-3 text-white px-7 py-2.5 rounded-full font-semibold text-sm" style={{ background: 'linear-gradient(135deg, #F97316, #DC2626)' }}>{ac.ctaBtn}</Link>
         </div>
       </article>
       <Footer />

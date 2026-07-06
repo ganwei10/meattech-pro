@@ -2,12 +2,19 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
+import { rateLimit } from '@/lib/rateLimit';
 
 const secret = new TextEncoder().encode(
   process.env.SESSION_SECRET || 'meattech-pro-secret-key-change-in-prod32!'
 );
 
 export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  const { success, remaining } = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+  if (!success) {
+    return NextResponse.json({ error: '操作过于频繁，请稍后再试' }, { status: 429 });
+  }
+
   const { email, password } = await request.json();
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !bcrypt.compareSync(password, user.password)) {

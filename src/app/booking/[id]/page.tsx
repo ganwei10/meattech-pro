@@ -16,10 +16,10 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
     return (
       <>
         <Header />
-        <div style={{ paddingTop: 120, paddingBottom: 60, textAlign: 'center', minHeight: '60vh' }}>
-          <div style={{ fontSize: '3rem', marginBottom: 16 }}>{bd.notFoundIcon}</div>
-          <h1 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#6B7280' }}>{bd.notFoundTitle}</h1>
-          <Link href="/booking" style={{ color: '#1E3A8A', fontWeight: 600, marginTop: 16, display: 'inline-block' }}>{bd.backToBooking}</Link>
+        <div className="pt-20 md:pt-24 pb-12 md:pb-16 text-center min-h-[60vh]">
+          <div className="text-4xl md:text-5xl mb-4">{bd.notFoundIcon}</div>
+          <h1 className="text-lg md:text-xl font-bold text-[#6B7280]">{bd.notFoundTitle}</h1>
+          <Link href="/booking" className="text-[#1E3A8A] font-semibold mt-4 inline-block">{bd.backToBooking}</Link>
         </div>
         <Footer />
       </>
@@ -49,19 +49,19 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
   return (
     <>
       <Header />
-      <div className="container" style={{ paddingTop: 120, paddingBottom: 60, maxWidth: 720 }}>
-        <Link href="/booking" style={{ color: '#6B7280', fontSize: '.88rem', marginBottom: 16, display: 'inline-block' }}>{bd.backBtn}</Link>
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: 24 }}>{bd.title}</h1>
+        <div className="pt-20 md:pt-24 pb-12 md:pb-16 max-w-3xl mx-auto px-4">
+        <Link href="/booking" className="text-[#6B7280] text-sm mb-4 inline-block">{bd.backBtn}</Link>
+        <h1 className="text-xl md:text-2xl font-extrabold mb-6">{bd.title}</h1>
 
-        <div style={{ background: '#fff', borderRadius: 16, padding: 32, boxShadow: '0 2px 12px rgba(0,0,0,0.04)', marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div className="bg-white rounded-2xl p-5 md:p-8 shadow-sm mb-6">
+          <div className="flex justify-between items-start mb-6 flex-wrap gap-3">
             <div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{booking.line?.name || bd.lineUnavailable}</h2>
-              <p style={{ fontSize: '.85rem', color: '#6B7280', marginTop: 4 }}>{booking.line?.region || ''} {booking.line?.specs ? `| ${booking.line.specs}` : ''}</p>
+              <h2 className="text-lg md:text-xl font-bold">{booking.line?.name || bd.lineUnavailable}</h2>
+              <p className="text-sm text-[#6B7280] mt-1">{booking.line?.region || ''} {booking.line?.specs ? `| ${booking.line.specs}` : ''}</p>
             </div>
-            <span style={{ fontSize: '.82rem', padding: '6px 14px', borderRadius: 8, background: st.bg, color: st.color, fontWeight: 700 }}>{st.label}</span>
+            <span className="text-xs px-3 py-1.5 rounded-lg font-bold" style={{ background: st.bg, color: st.color }}>{st.label}</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {fields.map(f => (
               <div key={f.label} style={{ padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
                 <div style={{ fontSize: '.78rem', color: '#9CA3AF', marginBottom: 4 }}>{f.label}</div>

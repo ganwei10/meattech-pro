@@ -50,11 +50,11 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
   return (
     <>
       <Header />
-      <div className="container" style={{ paddingTop: 120, paddingBottom: 60, minHeight: '60vh' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 8 }}>
-          {sc.title} {q && <span style={{ color: '#6B7280', fontSize: '1.2rem' }}>— "{q}"</span>}
+      <div className="container pt-20 md:pt-24 pb-12 md:pb-16 min-h-[60vh]">
+        <h1 className="text-xl md:text-3xl font-extrabold mb-2">
+          {sc.title} {q && <span className="text-[#6B7280] text-base md:text-xl">— "{q}"</span>}
         </h1>
-        <p style={{ color: '#6B7280', marginBottom: 32, fontSize: '.9rem' }}>{sc.resultCountText} {total} 条结果</p>
+        <p className="text-[#6B7280] mb-6 md:mb-8 text-sm">{sc.resultCountText} {total} 条结果</p>
 
         {total === 0 && q && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#9CA3AF' }}>
@@ -84,7 +84,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
         {products.length > 0 && (
           <div>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: '#1E3A8A' }}>{sc.productsHeader} ({products.length})</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {products.map(p => (
                 <div key={p.id} style={{ background: '#fff', padding: 20, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
                   <span style={{ fontSize: '.75rem', background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 4 }}>{p.category}</span>

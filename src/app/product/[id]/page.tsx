@@ -23,9 +23,9 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
   return (
     <>
       <Header />
-      <section style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px 80px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <Link href="/#reverse" style={{ color: '#6B7280', fontSize: '.88rem', textDecoration: 'none' }}>{pc.backBtn}</Link>
+      <section className="max-w-4xl mx-auto px-4 py-8 md:py-10 pb-16 md:pb-20">
+        <div className="mb-6">
+          <Link href="/#reverse" className="text-[#6B7280] text-sm no-underline">{pc.backBtn}</Link>
         </div>
 
         {product.cover && (
@@ -35,14 +35,14 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           </div>
         )}
 
-        <div style={{ background: '#fff', borderRadius: 16, padding: 32, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <span style={{ fontSize: '2rem' }}>{bannerIcons[product.category] || '🍖'}</span>
-            <span style={{ background: '#F3F4F6', color: '#374151', padding: '4px 12px', borderRadius: 4, fontSize: '.8rem', fontWeight: 600 }}>{product.category}</span>
-            {product.featured && <span style={{ background: '#FEF3C7', color: '#92400E', padding: '4px 12px', borderRadius: 4, fontSize: '.8rem', fontWeight: 600 }}>{pc.featuredBadge}</span>}
+        <div className="bg-white rounded-2xl p-5 md:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <span className="text-2xl md:text-3xl">{bannerIcons[product.category] || '🍖'}</span>
+            <span className="bg-[#F3F4F6] text-[#374151] px-3 py-1 rounded text-xs font-semibold">{product.category}</span>
+            {product.featured && <span className="bg-[#FEF3C7] text-[#92400E] px-3 py-1 rounded text-xs font-semibold">{pc.featuredBadge}</span>}
           </div>
 
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1F2937', marginBottom: 16 }}>{product.title}</h1>
+          <h1 className="text-xl md:text-3xl font-extrabold text-[#1F2937] mb-4">{product.title}</h1>
 
           {product.tags && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
@@ -79,9 +79,9 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
             </div>
           )}
 
-          <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '.82rem', color: '#9CA3AF' }}>{pc.publishText} {new Date(product.createdAt).toISOString().slice(0, 10)}</span>
-            <Link href="/booking" style={{ background: 'linear-gradient(135deg, #F97316, #DC2626)', color: '#fff', padding: '10px 20px', borderRadius: 8, fontSize: '.88rem', fontWeight: 600, textDecoration: 'none' }}>
+          <div className="mt-8 pt-6 border-t border-[#E5E7EB] flex flex-wrap justify-between items-center gap-3">
+            <span className="text-xs md:text-sm text-[#9CA3AF]">{pc.publishText} {new Date(product.createdAt).toISOString().slice(0, 10)}</span>
+            <Link href="/booking" className="text-white px-5 py-2.5 rounded-lg text-sm font-semibold no-underline" style={{ background: 'linear-gradient(135deg, #F97316, #DC2626)' }}>
               {pc.bookBtn}
             </Link>
           </div>

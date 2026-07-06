@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { safeFindReviews } from '@/lib/safeQuery';
 import { getCurrentUser } from '@/lib/auth';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +21,12 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    }
+
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const { success, remaining } = rateLimit(`reviews:${ip}`, 10, 60 * 60 * 1000);
+    if (!success) {
+      return NextResponse.json({ error: '操作过于频繁，请稍后再试' }, { status: 429 });
     }
 
     const body = await request.json();
