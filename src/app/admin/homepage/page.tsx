@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { defaultSiteGlobalConfig } from '@/lib/siteConfig';
 
 interface CarouselItem {
   tag: string; title: string; desc: string; bg: string; btn: string; link: string;
@@ -142,7 +143,7 @@ export default function HomepageAdminPage() {
   const [carousel, setCarousel] = useState<CarouselItem[]>([]);
   const [industry, setIndustry] = useState<IndustryItem[]>([]);
   const [reverse, setReverse] = useState<ReverseItem[]>([]);
-  const [globalCfg, setGlobalCfg] = useState<GlobalConfig | null>(null);
+  const [globalCfg, setGlobalCfg] = useState<GlobalConfig>(defaultSiteGlobalConfig as unknown as GlobalConfig);
   const [footer, setFooter] = useState<FooterConfig>({ title: '', subtitle: '', groups: [] });
   const [sections, setSections] = useState<SectionsConfig>({
     heroBadge: '🥩 肉制品研发与智能中试平台',

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getSiteGlobalConfig } from '@/lib/siteConfig';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,9 @@ export async function GET() {
       }
     }
 
+    // Use getSiteGlobalConfig to return deeply-merged config (with defaults for any missing fields)
+    const mergedGlobal = await getSiteGlobalConfig();
+
     return NextResponse.json({
       carousel: config.homepage_carousel || [],
       industry: config.homepage_industry || [],
@@ -34,7 +38,7 @@ export async function GET() {
       pilot: config.homepage_pilot || null,
       sections: config.homepage_sections || null,
       reverse: config.homepage_reverse || [],
-      global: config.site_global || null,
+      global: mergedGlobal,
     });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch homepage config', detail: String(error) }, { status: 500 });
