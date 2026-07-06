@@ -168,8 +168,6 @@ export default async function HomePage() {
   const activeRegions = regionOrder.filter(r => linesByRegion[r] && linesByRegion[r].length > 0);
 
   const banners = ['banner-1', 'banner-2', 'banner-3'];
-  const bannersMap: Record<string, string> = { '气调预制菜': 'banner-1', '低温调理肉': 'banner-2', '休闲及其他': 'banner-3' };
-  const bannerIcons: Record<string, string> = { '气调预制菜': '🍳', '低温调理肉': '🥩', '休闲及其他': '🌶️' };
 
   return (
     <>
@@ -217,7 +215,7 @@ export default async function HomePage() {
           </div>
           <p className="section-intro">{sectionsConfig.reverseIntro}</p>
           <div className="reverse-grid">
-            {/* CMS-managed custom items first */}
+            {/* CMS-managed items only (managed in admin → 货架直通 tab) */}
             {reverseItems.map((item, i) => (
               <Link key={`rev-cms-${i}`} href={item.link || '/#reverse'} className="reverse-card">
                 <div className={`reverse-card-banner ${banners[i % 3]}`}>
@@ -229,23 +227,6 @@ export default async function HomePage() {
                   <div className="difficulty-box">
                     <div className="label">{hpConfig.keyDifficulty}</div>
                     <div className="text">{item.difficulty}</div>
-                  </div>
-                  <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>{hpConfig.reverseReportLink}</span>
-                </div>
-              </Link>
-            ))}
-            {/* Then product database items */}
-            {products.map((p, i) => (
-              <Link key={p.id} href={`/product/${p.id}`} className="reverse-card">
-                <div className={`reverse-card-banner ${bannersMap[p.category] || banners[i % 3]}`}>
-                  <span className="cat-tag">{p.category}</span>
-                  {bannerIcons[p.category] || '🍖'}
-                </div>
-                <div className="reverse-card-body">
-                  <h4>{p.title}</h4>
-                  <div className="difficulty-box">
-                    <div className="label">{hpConfig.keyDifficulty}</div>
-                    <div className="text">{p.difficulty}</div>
                   </div>
                   <span style={{ color: '#1E3A8A', fontSize: '.88rem', fontWeight: 600, borderBottom: '2px solid transparent' }}>{hpConfig.reverseReportLink}</span>
                 </div>

@@ -493,8 +493,7 @@ export default function HomepageAdminPage() {
         <div>
           <div style={{ ...cardStyle, background: '#FEF3C7', borderLeft: '4px solid #F59E0B' }}>
             <p style={{ fontSize: '.85rem', color: '#92400E', margin: 0 }}>
-              💡 此处管理的卡片会显示在首页"货架直通车间"板块。数据库中的产品会自动追加在自定义卡片之后。
-              如需管理产品库，请前往「商超爆款」页面。
+              💡 此处管理的卡片即为首页"货架直通车间"板块展示的全部内容。卡片链接可指向产品页（如 /product/1）或其他页面。
             </p>
           </div>
           {reverse.map((item, i) => (
