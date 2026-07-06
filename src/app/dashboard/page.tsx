@@ -50,10 +50,11 @@ export default function DashboardPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'bills' | 'favorites'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'bills' | 'favorites' | 'notifications'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -75,10 +76,11 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const [bRes, blRes, fRes] = await Promise.all([
+    const [bRes, blRes, fRes, nRes] = await Promise.all([
       fetch('/api/me/bookings'),
       fetch('/api/me/bills'),
       fetch('/api/favorites'),
+      fetch('/api/notifications'),
     ]);
     if (bRes.ok) {
       const d = await bRes.json();
@@ -91,6 +93,10 @@ export default function DashboardPage() {
     if (fRes.ok) {
       const d = await fRes.json();
       setFavorites(d.favorites || []);
+    }
+    if (nRes.ok) {
+      const d = await nRes.json();
+      setNotifications(d.notifications || []);
     }
     setLoading(false);
   };
@@ -180,6 +186,11 @@ export default function DashboardPage() {
             borderBottom: activeTab === 'favorites' ? '2px solid #1E3A8A' : '2px solid transparent',
             marginTop: -2, flexShrink: 0,
           }}>❤️ 我的收藏</button>
+          <button onClick={() => setActiveTab('notifications')} className="px-6 py-3 bg-none border-none text-sm font-bold whitespace-nowrap cursor-pointer" style={{
+            color: activeTab === 'notifications' ? '#1E3A8A' : '#6B7280',
+            borderBottom: activeTab === 'notifications' ? '2px solid #1E3A8A' : '2px solid transparent',
+            marginTop: -2, flexShrink: 0,
+          }}>🔔 通知{notifications.filter(n => !n.isRead).length > 0 && <span style={{ marginLeft: 4, background: '#ef4444', color: '#fff', fontSize: '.65rem', fontWeight: 700, borderRadius: 10, padding: '1px 6px' }}>{notifications.filter(n => !n.isRead).length}</span>}</button>
         </div>
 
         {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>加载中...</div> : (
@@ -305,6 +316,54 @@ export default function DashboardPage() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 通知列表 */}
+            {activeTab === 'notifications' && (
+              <div>
+                {notifications.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 60, background: '#FFF', borderRadius: 12, color: '#9CA3AF' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔔</div>
+                    <p>暂无通知</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {notifications.map(n => (
+                      <div key={n.id} style={{
+                        background: '#FFF', borderRadius: 12, padding: 20,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                        borderLeft: n.isRead ? '3px solid #E5E7EB' : '3px solid #2563EB',
+                        opacity: n.isRead ? 0.7 : 1,
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{
+                              padding: '2px 10px', borderRadius: 8, fontSize: '.72rem', fontWeight: 600,
+                              background: n.type === 'BOOKING_CONFIRMED' ? '#DBEAFE' : n.type === 'REVIEW_RECEIVED' ? '#FEF3C7' : '#F3F4F6',
+                              color: n.type === 'BOOKING_CONFIRMED' ? '#1E40AF' : n.type === 'REVIEW_RECEIVED' ? '#92400E' : '#374151',
+                            }}>
+                              {n.type === 'BOOKING_CONFIRMED' ? '预约' : n.type === 'REVIEW_RECEIVED' ? '评价' : '系统'}
+                            </span>
+                            <span style={{ fontSize: '.95rem', fontWeight: 600, color: '#1F2937' }}>{n.title}</span>
+                          </div>
+                          <span style={{ fontSize: '.78rem', color: '#9CA3AF' }}>{new Date(n.createdAt).toLocaleString('zh-CN')}</span>
+                        </div>
+                        <p style={{ fontSize: '.88rem', color: '#4B5563', lineHeight: 1.6 }}>{n.content}</p>
+                        {n.link && <Link href={n.link} style={{ color: '#1E3A8A', fontWeight: 600, fontSize: '.85rem', marginTop: 8, display: 'inline-block' }}>查看详情 →</Link>}
+                        {!n.isRead && (
+                          <button
+                            onClick={async () => {
+                              await fetch(`/api/notifications/${n.id}`, { method: 'PUT' });
+                              setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: true } : item));
+                            }}
+                            style={{ float: 'right', background: 'none', border: '1px solid #E5E7EB', padding: '4px 12px', borderRadius: 6, fontSize: '.78rem', cursor: 'pointer', color: '#6B7280' }}
+                          >标记已读</button>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

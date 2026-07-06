@@ -18,6 +18,7 @@ export default function HeaderClient({ config }: HeaderClientProps) {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -26,6 +27,15 @@ export default function HeaderClient({ config }: HeaderClientProps) {
       .then(d => { setUser(d.user); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetch('/api/notifications?unread=true')
+        .then(r => r.json())
+        .then(d => { setUnreadCount(d.notifications?.length || 0); })
+        .catch(() => {});
+    }
+  }, [user]);
 
   useEffect(() => {
     if (searchOpen && searchRef.current) {
@@ -96,6 +106,12 @@ export default function HeaderClient({ config }: HeaderClientProps) {
           {!loading && (
             user ? (
               <div className="flex items-center gap-3">
+                <Link href="/dashboard" style={{ position: 'relative', fontSize: '1.1rem', color: '#fff', textDecoration: 'none' }} title="通知">
+                  🔔
+                  {unreadCount > 0 && (
+                    <span style={{ position: 'absolute', top: -4, right: -8, background: '#ef4444', color: '#fff', fontSize: '.65rem', fontWeight: 700, borderRadius: 10, padding: '1px 5px', minWidth: 16, textAlign: 'center' }}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+                  )}
+                </Link>
                 <Link href="/dashboard" style={{ fontSize: '.88rem', color: '#fff', fontWeight: 500, textDecoration: 'none' }}>
                   👤 {user.name || user.email}
                 </Link>
@@ -117,6 +133,18 @@ export default function HeaderClient({ config }: HeaderClientProps) {
 
         {/* Mobile right section — visible only on mobile */}
         <div className="flex items-center gap-2 md:hidden ml-auto">
+          {/* Mobile notification bell — only when logged in */}
+          {!loading && user && (
+            <Link href="/dashboard" className="p-2 text-white relative" aria-label="通知">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {unreadCount > 0 && (
+                <span style={{ position: 'absolute', top: 0, right: 0, background: '#ef4444', color: '#fff', fontSize: '.6rem', fontWeight: 700, borderRadius: 10, padding: '1px 4px', minWidth: 14, textAlign: 'center' }}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+              )}
+            </Link>
+          )}
           {/* Mobile search toggle */}
           <button
             onClick={() => setSearchOpen(!searchOpen)}
